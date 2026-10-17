@@ -17,8 +17,12 @@
   <meta property="og:description" content="Small Penguin, Big File Solutions! จัดการไฟล์ PDF และรูปภาพง่าย ๆ ในสไตล์เพนกวิน">
   <meta property="og:image" content="./assets/images/og-preview.png">
 
+  <meta name="theme-color" content="#0284c7">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./assets/images/icon.svg">
+
   <!-- Favicon (Inline Cute Penguin SVG) -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='22' fill='%23e0f2fe'/%3E%3Cellipse cx='24' cy='28' rx='15' ry='14' fill='%231e293b'/%3E%3Cellipse cx='24' cy='30' rx='10' ry='10' fill='%23ffffff'/%3E%3Cpath d='M15 22 Q24 19 33 22 Q24 25 15 22 Z' fill='%230284c7'/%3E%3Ccircle cx='24' cy='16' r='11' fill='%231e293b'/%3E%3Ccircle cx='20' cy='15' r='1.6' fill='%230f172a'/%3E%3Ccircle cx='28' cy='15' r='1.6' fill='%230f172a'/%3E%3Cpath d='M22 17 Q24 16 26 17 Q24 20 22 17 Z' fill='%23f59e0b'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="./assets/images/icon.svg">
 
   <!-- Google Fonts: Prompt & Kanit -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -87,6 +91,11 @@
       </nav>
 
       <div class="header-right-actions">
+        <button type="button" class="btn-pwa-install" id="pwaInstallBtn" style="display: none;" onclick="PenguApp.installPwa()" title="ติดตั้งแอปลงเครื่อง">
+          <span>📲</span>
+          <span>ติดตั้งแอป</span>
+        </button>
+
         <button type="button" class="theme-toggle-btn" id="themeToggleBtn" aria-label="สลับโหมดมืด/สว่าง" title="สลับโหมดมืด/สว่าง">
           <span id="themeToggleIcon">🌙</span>
         </button>
@@ -107,7 +116,7 @@
       <div class="brand-title">
         <span style="font-size: 1.4rem;">🐧</span>
         <span class="brand-name">PenguTools</span>
-        <span class="brand-badge">v1.0</span>
+        <span class="brand-badge">v1.3</span>
       </div>
       <button type="button" class="btn-icon-subtle mobile-drawer-close" onclick="PenguApp.closeMobileMenu()" aria-label="ปิดเมนู">✕</button>
     </div>
@@ -127,7 +136,7 @@
             <span class="mobile-nav-icon">📑</span>
             <div class="mobile-nav-text">
               <span class="mobile-nav-title">PDF Tools</span>
-              <span class="mobile-nav-desc">รวม, แยก, บีบอัด, จัดหน้า PDF</span>
+              <span class="mobile-nav-desc">รวม, เซ็น, บีบอัด, จัดหน้า PDF</span>
             </div>
           </a>
         </li>
@@ -148,6 +157,15 @@
               <span class="mobile-nav-desc">เช็คขนาด, ดู ZIP, เปรียบเทียบไฟล์</span>
             </div>
           </a>
+        </li>
+        <li>
+          <button type="button" id="mobilePwaInstallBtn" class="mobile-nav-link" style="display: none; width: 100%; border: none; font-family: inherit; text-align: left; cursor: pointer; color: var(--primary-700); background: var(--primary-50);" onclick="PenguApp.installPwa()">
+            <span class="mobile-nav-icon">📲</span>
+            <div class="mobile-nav-text">
+              <span class="mobile-nav-title">ติดตั้งแอปลงเครื่อง (PWA)</span>
+              <span class="mobile-nav-desc">เปิดใช้งานได้แม้ไม่มีอินเทอร์เน็ต</span>
+            </div>
+          </button>
         </li>
       </ul>
 
@@ -186,6 +204,7 @@
           <h4>เครื่องมือ PDF ยอดนิยม</h4>
           <ul class="footer-links">
             <li><a href="#/merge-pdf">รวมไฟล์ PDF (Merge)</a></li>
+            <li><a href="#/sign-pdf">เซ็นเอกสาร PDF (Sign PDF)</a></li>
             <li><a href="#/organize-pdf">จัดเรียง ลบ หมุนหน้า PDF (Organize)</a></li>
             <li><a href="#/split-pdf">แยกไฟล์ PDF (Split)</a></li>
             <li><a href="#/compress-pdf">บีบอัด PDF (Compress)</a></li>
@@ -235,5 +254,18 @@
   <script src="./assets/js/tools/image-tools.js"></script>
   <script src="./assets/js/tools/file-tools.js"></script>
   <script src="./assets/js/app.js"></script>
+
+  <!-- Service Worker Registration for PWA Offline Mode -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').then((reg) => {
+          console.log('[SW] Registered successfully with scope:', reg.scope);
+        }).catch((err) => {
+          console.warn('[SW] Service Worker registration failed:', err);
+        });
+      });
+    }
+  </script>
 </body>
 </html>

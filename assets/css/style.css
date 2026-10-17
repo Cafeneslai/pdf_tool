@@ -2864,4 +2864,322 @@ input[type="range"].range-slider::-moz-range-thumb {
   margin-top: auto;
 }
 
+/* ==========================================================================
+   Sign PDF (Signature Pad & Placement Controls)
+   ========================================================================== */
+.sign-pdf-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sign-tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--slate-200);
+  padding-bottom: 8px;
+}
+
+.sign-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--slate-600);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sign-tab-btn:hover {
+  background: var(--primary-50);
+  color: var(--primary-700);
+}
+
+.sign-tab-btn.active {
+  background: var(--primary-100);
+  color: var(--primary-700);
+  border-color: var(--primary-300);
+}
+
+.sign-draw-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sign-canvas-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: var(--slate-50);
+  padding: 8px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--slate-200);
+}
+
+.sign-color-picker, .sign-width-picker {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sign-ctrl-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--slate-600);
+}
+
+.color-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px var(--slate-300);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.color-dot:hover {
+  transform: scale(1.15);
+}
+
+.color-dot.active {
+  box-shadow: 0 0 0 2.5px var(--primary-500);
+  transform: scale(1.15);
+}
+
+.btn-clear-sig {
+  background: transparent;
+  border: 1px solid var(--slate-200);
+  color: var(--slate-600);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-clear-sig:hover {
+  background: var(--danger-50);
+  color: var(--danger-700);
+  border-color: var(--danger-200);
+}
+
+.sign-canvas-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 2px dashed var(--primary-300);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+#signatureCanvas {
+  display: block;
+  width: 100%;
+  height: 190px;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.sign-canvas-hint {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--slate-400);
+  pointer-events: none;
+}
+
+.sign-upload-box {
+  background: var(--slate-50);
+  border: 2px dashed var(--slate-300);
+  border-radius: var(--radius-md);
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+/* ==========================================================================
+   Workflow Chaining (Next Action Recommendations)
+   ========================================================================== */
+.chain-workflow-box {
+  margin-top: 2rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, var(--primary-50) 0%, #e0f2fe 100%);
+  border: 1.5px solid var(--primary-200);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+}
+
+.chain-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chain-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--primary-800);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chain-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(2, 132, 199, 0.12);
+  color: var(--primary-700);
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+}
+
+.chain-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chain-pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #ffffff;
+  border: 1.5px solid var(--primary-200);
+  border-radius: var(--radius-full);
+  color: var(--slate-700);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  box-shadow: 0 2px 4px rgba(2, 132, 199, 0.05);
+}
+
+.chain-pill-btn:hover {
+  background: var(--primary-600);
+  border-color: var(--primary-600);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+/* PWA Install Button */
+.btn-pwa-install {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+  color: #ffffff !important;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.25);
+  transition: all var(--transition-fast);
+}
+
+.btn-pwa-install:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+/* Dark Theme Overrides for Chaining & Signature */
+[data-theme="dark"] .sign-tabs {
+  border-bottom-color: #243048;
+}
+
+[data-theme="dark"] .sign-tab-btn {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .sign-tab-btn:hover {
+  background: #17243c;
+  color: #38bdf8;
+}
+
+[data-theme="dark"] .sign-tab-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border-color: #38bdf8;
+}
+
+[data-theme="dark"] .sign-canvas-controls {
+  background: #17243c;
+  border-color: #243048;
+}
+
+[data-theme="dark"] .sign-ctrl-label {
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .sign-canvas-wrap {
+  background: #0f172a;
+  border-color: #38bdf8;
+}
+
+[data-theme="dark"] .sign-canvas-hint {
+  color: #64748b;
+}
+
+[data-theme="dark"] .btn-clear-sig {
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .btn-clear-sig:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+[data-theme="dark"] .sign-upload-box {
+  background: #17243c;
+  border-color: #243048;
+}
+
+[data-theme="dark"] .chain-workflow-box {
+  background: #131d31;
+  border-color: #243048;
+}
+
+[data-theme="dark"] .chain-title {
+  color: #7dd3fc;
+}
+
+[data-theme="dark"] .chain-badge {
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+}
+
+[data-theme="dark"] .chain-pill-btn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .chain-pill-btn:hover {
+  background: #0284c7;
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
 

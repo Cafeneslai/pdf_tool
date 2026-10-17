@@ -1,8 +1,8 @@
 # 🐧 PenguTools — ข้อมูลเวอร์ชันและบันทึกการเปลี่ยนแปลง (Version & Changelog)
 
-> **Current Version:** `v1.2.0`  
-> **Release Date:** 2026-10-17  
-> **Architecture:** 100% Client-Side In-Browser Processing (Zero-Backend, Zero-Dependency Static App)  
+> **Current Version:** `v1.3.0`  
+> **Release Date:** 2026-10-18  
+> **Architecture:** 100% Client-Side In-Browser Processing (Zero-Backend, PWA Installable, Offline Ready)  
 > **Maintainer:** Cafeneslai  
 > **Repository:** [https://github.com/Cafeneslai/pdf_tool.git](https://github.com/Cafeneslai/pdf_tool.git)
 
@@ -12,13 +12,38 @@
 
 | เวอร์ชัน | วันที่เผยแพร่ | สถานะ | สรุปไฮไลท์สำคัญ |
 | :--- | :--- | :--- | :--- |
-| **v1.2.0** | 2026-10-17 | **Current (Stable)** | แก้ไขบัคความปลอดภัย (XSS), แก้ปัญหา Memory Leak (Canvas Buffers), รองรับเลขอารบิก-ไทย, ปรับปรุง Responsive & Touch ทุกหน้าจอ, เพิ่มระบบ Mobile Drawer Navigation |
+| **v1.3.0** | 2026-10-18 | **Current (Stable)** | เพิ่มเครื่องมือ **Sign PDF (เซ็นเอกสาร PDF ออนไลน์)**, ระบบ **Workflow Chaining (ส่งต่อไฟล์ข้ามเครื่องมือ)**, รองรับ **Progressive Web App (PWA) & Offline Mode** |
+| **v1.2.0** | 2026-10-17 | Stable | แก้ไขบัคความปลอดภัย (XSS), แก้ปัญหา Memory Leak (Canvas Buffers), รองรับเลขอารบิก-ไทย, ปรับปรุง Responsive & Touch ทุกหน้าจอ, เพิ่มระบบ Mobile Drawer Navigation |
 | **v1.1.0** | 2026-10-15 | Stable | เพิ่มเครื่องมือใหม่ 8 รายการ: Organize PDF, Unlock PDF, Watermark PDF, Compare Files, Inspect ZIP, ปรับแต่ง Dark Mode สมบูรณ์ |
 | **v1.0.0** | 2026-10-10 | Initial Release | เปิดตัว PenguTools พร้อม 10 เครื่องมือพื้นฐาน (PDF, Image, File Utilities) และมาสคอตน้องเพนกวิน |
 
 ---
 
 ## 🚀 บันทึกการเปลี่ยนแปลงฉบับละเอียด (Detailed Changelog)
+
+### [v1.3.0] — 2026-10-18 (Sign PDF, Workflow Chaining & PWA Offline Engine)
+
+#### 🖊️ ฟีเจอร์ใหม่: Sign PDF (เซ็นเอกสาร PDF ออนไลน์)
+- เพิ่มเครื่องมือ `sign-pdf` ในหมวด PDF Tools
+- **Signature Drawing Pad:** ผืนผ้าใบวาดลายเซ็นความละเอียดสูง รองรับทั้งการใช้นิ้วมือบนหน้าจอสัมผัส (Touch Screen) และเมาส์ มีระบบป้องกันหน้าจอเลื่อนขณะวาด
+- **Pen Controls:** ปรับสีหมึกได้ 3 สียอดนิยม (ดำ `#0f172a`, น้ำเงิน `#1d4ed8`, แดง `#dc2626`) และเลือกขนาดเส้น (บาง, ปานกลาง, หนา) พร้อมปุ่มล้างลายเซ็น
+- **Image Signature Upload:** รองรับการอัปโหลดรูปภาพลายเซ็น (PNG โปร่งใส หรือ JPG)
+- **Visual Placement & Presets:** เลือกหน้าที่ต้องการวางลายเซ็น (เช่น หน้าสุดท้าย หรือระบุหน้าเอง), กำหนดตำแหน่งผ่าน Presets (ล่างขวามาตรฐานสัญญา, ล่างซ้าย, ล่างตรงกลาง, ตรงกลางหน้า) หรือปรับละเอียดด้วยแถบสไลเดอร์ X, Y, Size
+- **Date Stamp:** ตัวเลือกประทับตราวันที่กำกับใต้ลายเซ็นอัตโนมัติ
+
+#### 🔄 ฟีเจอร์ใหม่: Workflow Chaining (ส่งต่อไฟล์ข้ามเครื่องมือแบบไร้รอยต่อ)
+- เพิ่มระบบแนะนำเครื่องมือถัดไป (Next Action Recommendations) ในการ์ดแสดงผลลัพธ์
+- หากผลลัพธ์เป็น PDF ระบบจะแนะนำ: บีบอัด PDF, เซ็นชื่อ, จัดเรียงหน้า, ใส่ลายน้ำ, แปลงเป็นรูปภาพ, แยกหน้า
+- หากผลลัพธ์เป็นรูปภาพ ระบบจะแนะนำ: บีบอัดภาพ, ปรับขนาด, แปลงนามสกุล, แปลงเป็น PDF
+- ผู้ใช้สามารถกดปุ่มเครื่องมือที่ต้องการ แล้วระบบจะโหลดไฟล์เดิมเข้าไปในเครื่องมือใหม่ทันทีโดย **ไม่ต้องดาวน์โหลดและอัปโหลดซ้ำ** ประหยัดเวลาและหน่วยความจำ
+
+#### 📱 ฟีเจอร์ใหม่: Progressive Web App (PWA) & Offline Mode
+- เพิ่มไฟล์ `manifest.json` กำหนดคุณสมบัติ Web App Manifest พร้อมธีมสี `#0284c7`
+- สร้างไอคอนเวกเตอร์ SVG มาสคอตเพนกวิน `assets/images/icon.svg` สำหรับไอคอนแอปพลิเคชัน
+- ติดตั้ง Service Worker (`sw.js`) แคชไฟล์แอปพลิเคชันและไลบรารีสแตนด์อโลน ช่วยให้เปิดใช้งาน PenguTools ได้แบบ **ออฟไลน์ 100% แม้ไม่มีสัญญาณอินเทอร์เน็ต**
+- เพิ่มปุ่ม "📲 ติดตั้งแอป" บน Navbar และใน Mobile Drawer เพื่อให้ผู้ใช้ติดตั้งลงหน้าจอโทรศัพท์หรือคอมพิวเตอร์ได้ด้วยคลิกเดียว
+
+---
 
 ### [v1.2.0] — 2026-10-17 (Bug Fixes, Security & Responsive Overhaul)
 

@@ -502,6 +502,155 @@
         };
       }
     },
+    {
+      id: 'sign-pdf',
+      name: 'Sign PDF',
+      title: 'เซ็นเอกสาร PDF',
+      category: 'pdf',
+      icon: '🖊️',
+      desc: 'วาดลายเซ็นด้วยนิ้วมือหรือเมาส์ หรืออัปโหลดภาพลายเซ็น วางลงบนหน้าเอกสาร PDF ได้อิสระ ปลอดภัย 100%',
+      badge: 'New',
+      accept: '.pdf,application/pdf',
+      multiple: false,
+      btnText: 'บันทึกเอกสาร PDF พร้อมลายเซ็น',
+      renderSettings: () => `
+        <div class="sign-pdf-container">
+          <!-- Signature Source Tabs -->
+          <div class="sign-tabs">
+            <button type="button" class="sign-tab-btn active" id="tabDrawSig" onclick="PenguApp.switchSignTab('draw')">
+              ✍️ วาดลายเซ็น
+            </button>
+            <button type="button" class="sign-tab-btn" id="tabUploadSig" onclick="PenguApp.switchSignTab('upload')">
+              📁 อัปโหลดภาพลายเซ็น
+            </button>
+          </div>
+
+          <!-- Drawing Pad Area -->
+          <div id="drawSigArea" class="sign-draw-area">
+            <div class="sign-canvas-controls">
+              <div class="sign-color-picker">
+                <span class="sign-ctrl-label">สีหมึก:</span>
+                <button type="button" class="color-dot active" style="background:#0f172a;" onclick="PenguApp.setSignColor('#0f172a', this)" title="สีดำ"></button>
+                <button type="button" class="color-dot" style="background:#1d4ed8;" onclick="PenguApp.setSignColor('#1d4ed8', this)" title="สีน้ำเงิน"></button>
+                <button type="button" class="color-dot" style="background:#dc2626;" onclick="PenguApp.setSignColor('#dc2626', this)" title="สีแดง"></button>
+              </div>
+              <div class="sign-width-picker">
+                <span class="sign-ctrl-label">ขนาดเส้น:</span>
+                <select id="signPenWidth" class="form-control" style="padding: 4px 8px; min-height: 36px; width: auto;" onchange="PenguApp.setSignWidth(this.value)">
+                  <option value="2">บาง (2px)</option>
+                  <option value="3" selected>ปานกลาง (3px)</option>
+                  <option value="4">หนา (4px)</option>
+                </select>
+              </div>
+              <button type="button" class="btn-clear-sig" onclick="PenguApp.clearSignature()">
+                🗑️ ล้างลายเซ็น
+              </button>
+            </div>
+            <div class="sign-canvas-wrap">
+              <canvas id="signatureCanvas" width="540" height="190"></canvas>
+              <div class="sign-canvas-hint">ใช้นิ้วมือหรือเมาส์เซ็นชื่อในกรอบนี้</div>
+            </div>
+          </div>
+
+          <!-- Upload Image Area -->
+          <div id="uploadSigArea" class="sign-upload-area" style="display: none;">
+            <div class="sign-upload-box">
+              <input type="file" id="sigFileInput" accept="image/png,image/jpeg,image/webp" style="display: none;" onchange="PenguApp.handleSigFileSelect(this)">
+              <button type="button" class="btn-secondary" onclick="document.getElementById('sigFileInput').click()">
+                เลือกภาพลายเซ็น (PNG โปร่งใส หรือ JPG)
+              </button>
+              <div id="sigImagePreview" style="margin-top: 10px; display: none;">
+                <img id="sigImgTag" src="" alt="ภาพลายเซ็น" style="max-height: 90px; border: 1px dashed var(--slate-300); border-radius: 6px; padding: 4px; background: #fff;">
+              </div>
+            </div>
+          </div>
+
+          <!-- Signature Placement & Page Selection -->
+          <div class="settings-grid" style="margin-top: 1.5rem;">
+            <div class="form-group">
+              <label class="form-label">วางลายเซ็นที่หน้า</label>
+              <select id="signTargetPage" class="form-control">
+                <option value="last" selected>หน้าสุดท้าย (มาตรฐานสัญญา/เอกสาร)</option>
+                <option value="1">หน้าแรก (หน้า 1)</option>
+                <option value="all">ทุกหน้าในเอกสาร</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ตำแหน่งลายเซ็น (Presets)</label>
+              <select id="signPosPreset" class="form-control" onchange="PenguApp.applySignPreset(this.value)">
+                <option value="bottom-right" selected>ล่างขวา (มาตรฐานสัญญา/หนังสือราชการ)</option>
+                <option value="bottom-left">ล่างซ้าย</option>
+                <option value="bottom-center">ล่างตรงกลาง</option>
+                <option value="center">กึ่งกลางหน้ากระดาษ</option>
+                <option value="custom">กำหนดพิกัดเอง</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Position & Size Sliders -->
+          <div class="settings-grid" style="margin-top: 1rem;">
+            <div class="form-group">
+              <label class="form-label">ขนาดลายเซ็น: <span id="signSizeVal" class="range-val-badge">26%</span></label>
+              <div class="range-slider-wrap">
+                <input type="range" id="signSizeSlider" class="range-slider" min="10" max="50" value="26" oninput="PenguApp.handleSignSliderChange()">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ตำแหน่งแนวนอน (X): <span id="signPosXVal" class="range-val-badge">70%</span></label>
+              <div class="range-slider-wrap">
+                <input type="range" id="signPosXSlider" class="range-slider" min="0" max="100" value="70" oninput="PenguApp.handleSignSliderChange()">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">ตำแหน่งแนวตั้ง (Y): <span id="signPosYVal" class="range-val-badge">85%</span></label>
+              <div class="range-slider-wrap">
+                <input type="range" id="signPosYSlider" class="range-slider" min="0" max="100" value="85" oninput="PenguApp.handleSignSliderChange()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Date Stamp Option -->
+          <div class="form-group" style="margin-top: 1rem; background: var(--slate-50); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--slate-200);">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600;">
+              <input type="checkbox" id="signAddDate" onchange="document.getElementById('signDateInputGroup').style.display = this.checked ? 'block' : 'none'">
+              <span>ประทับตราวันที่กำกับใต้ลายเซ็น</span>
+            </label>
+            <div id="signDateInputGroup" style="display: none; margin-top: 8px;">
+              <input type="text" id="signDateText" class="form-control" placeholder="เช่น 18 ต.ค. 2569 หรือ 18/10/2026">
+            </div>
+          </div>
+        </div>
+      `,
+      execute: async (files, settings, onProgress) => {
+        const sigDataUrl = PenguApp.getSignatureDataUrl();
+        if (!sigDataUrl) {
+          throw new Error('กรุณาวาดลายเซ็นหรืออัปโหลดภาพลายเซ็นก่อนบันทึกครับ');
+        }
+
+        const targetPage = document.getElementById('signTargetPage')?.value || 'last';
+        const posX = parseInt(document.getElementById('signPosXSlider')?.value || '70', 10);
+        const posY = parseInt(document.getElementById('signPosYSlider')?.value || '85', 10);
+        const size = parseInt(document.getElementById('signSizeSlider')?.value || '26', 10);
+        const addDate = document.getElementById('signAddDate')?.checked || false;
+        const dateText = document.getElementById('signDateText')?.value || '';
+
+        const blob = await window.PdfTools.signPdf(files[0], {
+          signatureDataUrl: sigDataUrl,
+          targetPage: targetPage === 'last' ? 'all-last' : targetPage,
+          posXPercent: posX,
+          posYPercent: posY,
+          sizePercent: size,
+          addDate,
+          dateText
+        }, onProgress);
+
+        return {
+          blob,
+          filename: `${files[0].name.replace(/\.pdf$/i, '')}_signed.pdf`,
+          successMsg: 'เซ็นเอกสาร PDF เรียบร้อยแล้ว พร้อมดาวน์โหลดครับ! ✍️'
+        };
+      }
+    },
 
     // --- Image Tools ---
     {
@@ -1031,7 +1180,9 @@
     searchQuery: '',
     imageNaturalDims: { width: 1280, height: 720 },
     organizerPages: [],
-    organizerOriginalPages: []
+    organizerOriginalPages: [],
+    pendingChainedFile: null,
+    lastResultFilename: null
   };
 
   /**
@@ -1474,12 +1625,21 @@
         fileInput.click();
       }
     });
+
+    // Auto-load chained file if coming from workflow chaining
+    if (state.pendingChainedFile) {
+      const chained = state.pendingChainedFile;
+      state.pendingChainedFile = null;
+      setTimeout(() => {
+        handleFilesAdded([chained], tool);
+      }, 60);
+    }
   }
 
   /**
    * Handle Added Files & Validation
    */
-  function handleFilesAdded(incomingFiles, tool) {
+  function handleFilesAdded(incomingFiles, tool = state.currentTool) {
     if (!incomingFiles || incomingFiles.length === 0) return;
 
     // Filter by accepted types and non-empty files
@@ -1540,6 +1700,14 @@
     if (tool.id === 'organize-pdf' && state.selectedFiles[0]) {
       loadOrganizerThumbnails(state.selectedFiles[0]);
       return;
+    }
+
+    // Special handler for Sign PDF to init canvas and populate page count
+    if (tool.id === 'sign-pdf' && state.selectedFiles[0]) {
+      setTimeout(() => {
+        initSignaturePad();
+        populateSignPages(state.selectedFiles[0]);
+      }, 60);
     }
 
     updateWorkspaceUI(tool);
@@ -1703,9 +1871,12 @@
       if (result.blob) {
         state.currentResultBlob = result.blob;
         state.currentResultUrl = URL.createObjectURL(result.blob);
+        state.lastResultFilename = result.filename;
       }
 
       if (statusArea) {
+        const chainHtml = getChainRecommendationsHtml(result);
+
         statusArea.innerHTML = `
           <div class="status-card">
             <div class="status-mascot-box">
@@ -1731,6 +1902,8 @@
                 🔄 ทำรายการใหม่
               </button>
             </div>
+
+            ${chainHtml}
           </div>
         `;
         statusArea.scrollIntoView({ behavior: 'smooth' });
@@ -2032,6 +2205,316 @@
     draggedOrganizerIdx = null;
   }
 
+  /**
+   * Workflow Chaining Helpers
+   */
+  function getChainRecommendationsHtml(result) {
+    if (!result || !result.blob) return '';
+    const isPdf = result.blob.type === 'application/pdf' || (result.filename && result.filename.endsWith('.pdf'));
+    const isImg = result.blob.type.startsWith('image/') || (result.filename && result.filename.match(/\.(png|jpe?g|webp)$/i));
+    const isZip = result.filename && result.filename.endsWith('.zip');
+
+    let tools = [];
+    if (isPdf) {
+      tools = [
+        { id: 'compress-pdf', icon: '⚡', label: 'บีบอัด PDF' },
+        { id: 'sign-pdf', icon: '🖊️', label: 'เซ็นชื่อ' },
+        { id: 'organize-pdf', icon: '📑', label: 'จัดเรียง/หมุนหน้า' },
+        { id: 'watermark-pdf', icon: '💧', label: 'ใส่ลายน้ำ' },
+        { id: 'pdf-to-images', icon: '🖼️', label: 'แปลงเป็นภาพ' },
+        { id: 'split-pdf', icon: '✂️', label: 'แยกหน้า' }
+      ];
+    } else if (isImg) {
+      tools = [
+        { id: 'image-compressor', icon: '⚡', label: 'บีบอัดรูปภาพ' },
+        { id: 'image-resizer', icon: '📏', label: 'ปรับขนาดภาพ' },
+        { id: 'image-converter', icon: '🔄', label: 'แปลงนามสกุล' },
+        { id: 'images-to-pdf', icon: '📑', label: 'แปลงเป็น PDF' }
+      ];
+    } else if (isZip) {
+      tools = [
+        { id: 'inspect-zip', icon: '🔍', label: 'ดูเนื้อหาใน ZIP' },
+        { id: 'file-info', icon: 'ℹ️', label: 'ตรวจ SHA-256' }
+      ];
+    }
+
+    tools = tools.filter(t => t.id !== state.currentTool?.id);
+    if (tools.length === 0) return '';
+
+    return `
+      <div class="chain-workflow-box">
+        <div class="chain-header">
+          <span class="chain-title">⚡ ทำงานต่อด้วยไฟล์นี้ทันที</span>
+          <span class="chain-badge">ไม่ต้องอัปโหลดซ้ำ</span>
+        </div>
+        <div class="chain-pills">
+          ${tools.map(t => `
+            <button type="button" class="chain-pill-btn" onclick="PenguApp.chainToTool('${t.id}')">
+              <span>${t.icon}</span>
+              <span>${t.label}</span>
+            </button>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function chainToTool(targetToolId) {
+    if (!state.currentResultBlob) return;
+
+    const filename = state.lastResultFilename || 'pengutools_file';
+    const chainedFile = new File([state.currentResultBlob], filename, {
+      type: state.currentResultBlob.type,
+      lastModified: Date.now()
+    });
+
+    state.pendingChainedFile = chainedFile;
+    window.location.hash = '#/' + targetToolId;
+  }
+
+  /**
+   * Signature Pad Engine (Touch & Mouse Support)
+   */
+  const sigState = {
+    canvas: null,
+    ctx: null,
+    isDrawing: false,
+    hasDrawn: false,
+    penColor: '#0f172a',
+    penWidth: 3,
+    uploadedDataUrl: null,
+    activeTab: 'draw'
+  };
+
+  function initSignaturePad() {
+    const canvas = document.getElementById('signatureCanvas');
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const width = rect.width || 540;
+    const height = rect.height || 190;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = sigState.penColor;
+    ctx.lineWidth = sigState.penWidth;
+
+    sigState.canvas = canvas;
+    sigState.ctx = ctx;
+    sigState.hasDrawn = false;
+
+    const getPos = (e) => {
+      const b = canvas.getBoundingClientRect();
+      if (e.touches && e.touches[0]) {
+        return {
+          x: e.touches[0].clientX - b.left,
+          y: e.touches[0].clientY - b.top
+        };
+      }
+      return {
+        x: e.clientX - b.left,
+        y: e.clientY - b.top
+      };
+    };
+
+    canvas.onmousedown = (e) => {
+      sigState.isDrawing = true;
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      sigState.hasDrawn = true;
+    };
+    canvas.onmousemove = (e) => {
+      if (!sigState.isDrawing) return;
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    };
+    window.addEventListener('mouseup', () => {
+      sigState.isDrawing = false;
+    });
+
+    canvas.ontouchstart = (e) => {
+      e.preventDefault();
+      sigState.isDrawing = true;
+      const pos = getPos(e);
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+      sigState.hasDrawn = true;
+    };
+    canvas.ontouchmove = (e) => {
+      e.preventDefault();
+      if (!sigState.isDrawing) return;
+      const pos = getPos(e);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+    };
+    canvas.ontouchend = (e) => {
+      e.preventDefault();
+      sigState.isDrawing = false;
+    };
+  }
+
+  function clearSignature() {
+    if (!sigState.canvas || !sigState.ctx) return;
+    const dpr = window.devicePixelRatio || 1;
+    sigState.ctx.clearRect(0, 0, sigState.canvas.width / dpr, sigState.canvas.height / dpr);
+    sigState.hasDrawn = false;
+  }
+
+  function setSignColor(color, el) {
+    sigState.penColor = color;
+    if (sigState.ctx) sigState.ctx.strokeStyle = color;
+    document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+    if (el) el.classList.add('active');
+  }
+
+  function setSignWidth(w) {
+    sigState.penWidth = parseInt(w, 10) || 3;
+    if (sigState.ctx) sigState.ctx.lineWidth = sigState.penWidth;
+  }
+
+  function switchSignTab(mode) {
+    sigState.activeTab = mode;
+    const drawTab = document.getElementById('tabDrawSig');
+    const uploadTab = document.getElementById('tabUploadSig');
+    const drawArea = document.getElementById('drawSigArea');
+    const uploadArea = document.getElementById('uploadSigArea');
+    if (mode === 'draw') {
+      if (drawTab) drawTab.classList.add('active');
+      if (uploadTab) uploadTab.classList.remove('active');
+      if (drawArea) drawArea.style.display = 'block';
+      if (uploadArea) uploadArea.style.display = 'none';
+    } else {
+      if (drawTab) drawTab.classList.remove('active');
+      if (uploadTab) uploadTab.classList.add('active');
+      if (drawArea) drawArea.style.display = 'none';
+      if (uploadArea) uploadArea.style.display = 'block';
+    }
+  }
+
+  function handleSigFileSelect(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      sigState.uploadedDataUrl = e.target.result;
+      const preview = document.getElementById('sigImagePreview');
+      const img = document.getElementById('sigImgTag');
+      if (img) img.src = sigState.uploadedDataUrl;
+      if (preview) preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function getSignatureDataUrl() {
+    if (sigState.activeTab === 'upload') {
+      return sigState.uploadedDataUrl;
+    }
+    if (!sigState.hasDrawn || !sigState.canvas) {
+      return null;
+    }
+    return sigState.canvas.toDataURL('image/png');
+  }
+
+  function applySignPreset(val) {
+    const sizeSlider = document.getElementById('signSizeSlider');
+    const posXSlider = document.getElementById('signPosXSlider');
+    const posYSlider = document.getElementById('signPosYSlider');
+    if (!sizeSlider || !posXSlider || !posYSlider) return;
+
+    if (val === 'bottom-right') {
+      sizeSlider.value = 26;
+      posXSlider.value = 70;
+      posYSlider.value = 85;
+    } else if (val === 'bottom-left') {
+      sizeSlider.value = 26;
+      posXSlider.value = 10;
+      posYSlider.value = 85;
+    } else if (val === 'bottom-center') {
+      sizeSlider.value = 26;
+      posXSlider.value = 37;
+      posYSlider.value = 85;
+    } else if (val === 'center') {
+      sizeSlider.value = 30;
+      posXSlider.value = 35;
+      posYSlider.value = 50;
+    }
+    handleSignSliderChange();
+  }
+
+  function handleSignSliderChange() {
+    const size = document.getElementById('signSizeSlider')?.value || '26';
+    const posX = document.getElementById('signPosXSlider')?.value || '70';
+    const posY = document.getElementById('signPosYSlider')?.value || '85';
+    const sizeBadge = document.getElementById('signSizeVal');
+    const posXBadge = document.getElementById('signPosXVal');
+    const posYBadge = document.getElementById('signPosYVal');
+    if (sizeBadge) sizeBadge.textContent = `${size}%`;
+    if (posXBadge) posXBadge.textContent = `${posX}%`;
+    if (posYBadge) posYBadge.textContent = `${posY}%`;
+  }
+
+  async function populateSignPages(file) {
+    const targetSelect = document.getElementById('signTargetPage');
+    if (!targetSelect || !file || !window.PDFLib) return;
+
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const doc = await window.PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+      const count = doc.getPageCount();
+
+      let optionsHtml = `
+        <option value="last" selected>หน้าสุดท้าย (หน้า ${count}) - แนะนำ</option>
+        <option value="all">ทุกหน้าในเอกสาร (${count} หน้า)</option>
+      `;
+      for (let i = 1; i <= count; i++) {
+        optionsHtml += `<option value="${i}">หน้า ${i}</option>`;
+      }
+      targetSelect.innerHTML = optionsHtml;
+    } catch (e) {
+      console.warn('Could not read page count for sign target:', e);
+    }
+  }
+
+  /**
+   * PWA Installation Manager
+   */
+  let deferredPrompt = null;
+
+  function initPwaInstall() {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const installBtn = document.getElementById('pwaInstallBtn');
+      const mobileInstallBtn = document.getElementById('mobilePwaInstallBtn');
+      if (installBtn) installBtn.style.display = 'inline-flex';
+      if (mobileInstallBtn) mobileInstallBtn.style.display = 'flex';
+    });
+
+    window.addEventListener('appinstalled', () => {
+      deferredPrompt = null;
+      const installBtn = document.getElementById('pwaInstallBtn');
+      const mobileInstallBtn = document.getElementById('mobilePwaInstallBtn');
+      if (installBtn) installBtn.style.display = 'none';
+      if (mobileInstallBtn) mobileInstallBtn.style.display = 'none';
+      console.log('[PWA] PenguTools was successfully installed!');
+    });
+  }
+
+  function installPwa() {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+    });
+  }
+
   // Expose to window for inline onclicks
   window.PenguApp = {
     handleRouting,
@@ -2055,12 +2538,23 @@
     handleOrganizeDrop,
     handleOrganizeDragEnd,
     toggleMobileMenu,
-    closeMobileMenu
+    closeMobileMenu,
+    chainToTool,
+    switchSignTab,
+    setSignColor,
+    setSignWidth,
+    clearSignature,
+    handleSigFileSelect,
+    applySignPreset,
+    handleSignSliderChange,
+    getSignatureDataUrl,
+    installPwa
   };
 
-  // Init Theme & Router on load & hashchange
+  // Init Theme, PWA & Router on load & hashchange
   window.addEventListener('DOMContentLoaded', () => {
     initTheme();
+    initPwaInstall();
     handleRouting();
 
     // Close mobile menu on Escape key

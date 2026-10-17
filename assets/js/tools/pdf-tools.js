@@ -776,6 +776,111 @@ const PdfTools = {
     if (onProgress) onProgress(95, 'กำลังจัดทำไฟล์ PDF สมบูรณ์...');
     const pdfBytes = await doc.save();
     return new Blob([pdfBytes], { type: 'application/pdf' });
+  },
+
+  /**
+   * Embed signature and optional date stamp on chosen page(s)
+   */
+  signPdf: async function (file, options = {}, onProgress) {
+    if (!window.PDFLib) throw new Error('PDFLib is not loaded');
+    if (!options.signatureDataUrl) throw new Error('ไม่พบลายเซ็น กรุณาวาดลายเซ็นหรืออัปโหลดภาพลายเซ็นก่อน');
+
+    if (onProgress) onProgress(10, 'กำลังอ่านเอกสาร PDF...');
+    const arrayBuffer = await file.arrayBuffer();
+    const doc = await window.PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+    const pages = doc.getPages();
+    const totalPages = pages.length;
+
+    if (onProgress) onProgress(30, 'กำลังแปลงภาพลายเซ็น...');
+    
+    // Convert signature DataURL to PNG binary bytes
+    const base64Data = options.signatureDataUrl.split(',')[1];
+    const binaryStr = atob(base64Data);
+    const sigBytes = new Uint8Array(binaryStr.length);
+    for (let i = 0; i < binaryStr.length; i++) {
+      sigBytes[i] = binaryStr.charCodeAt(i);
+    }
+
+    const sigImage = await doc.embedPng(sigBytes);
+    const sigAspect = sigImage.width / sigImage.height;
+
+    // Optional date stamp canvas
+    let dateImage = null;
+    let dateAspect = 1;
+    if (options.addDate && options.dateText) {
+      const dCanvas = document.createElement('canvas');
+      const dCtx = dCanvas.getContext('2d');
+      dCtx.font = '24px "Prompt", "Kanit", sans-serif';
+      const textMetrics = dCtx.measureText(options.dateText);
+      const dWidth = Math.ceil(textMetrics.width) + 24;
+      const dHeight = 44;
+      dCanvas.width = dWidth;
+      dCanvas.height = dHeight;
+      dCtx.font = '24px "Prompt", "Kanit", sans-serif';
+      dCtx.fillStyle = options.dateColor || '#334155';
+      dCtx.textBaseline = 'middle';
+      dCtx.fillText(options.dateText, 12, dHeight / 2);
+
+      const dDataUrl = dCanvas.toDataURL('image/png');
+      const dBase64 = dDataUrl.split(',')[1];
+      const dBinStr = atob(dBase64);
+      const dBytes = new Uint8Array(dBinStr.length);
+      for (let i = 0; i < dBinStr.length; i++) {
+        dBytes[i] = dBinStr.charCodeAt(i);
+      }
+      dateImage = await doc.embedPng(dBytes);
+      dateAspect = dateImage.width / dateImage.height;
+
+      dCanvas.width = 0;
+      dCanvas.height = 0;
+    }
+
+    if (onProgress) onProgress(60, 'กำลังวางลายเซ็นลงบนหน้าเอกสาร...');
+
+    const targetPageNum = options.targetPage === 'all' ? 'all' : (parseInt(options.targetPage, 10) || totalPages);
+    const targetPages = targetPageNum === 'all' 
+      ? pages 
+      : [pages[Math.min(totalPages - 1, Math.max(0, targetPageNum - 1))]];
+
+    const sizePercent = Math.min(60, Math.max(8, options.sizePercent || 25)) / 100;
+    const posXPercent = Math.min(100, Math.max(0, options.posXPercent !== undefined ? options.posXPercent : 70)) / 100;
+    const posYPercent = Math.min(100, Math.max(0, options.posYPercent !== undefined ? options.posYPercent : 85)) / 100;
+
+    for (const page of targetPages) {
+      const { width, height } = page.getSize();
+      
+      const sigWidth = width * sizePercent;
+      const sigHeight = sigWidth / sigAspect;
+
+      // Note: PDF coordinates origin (0, 0) is at bottom-left
+      // posYPercent is 0 at top, 100 at bottom
+      const sigX = Math.max(0, Math.min(width - sigWidth, (width - sigWidth) * posXPercent));
+      const sigY = Math.max(0, Math.min(height - sigHeight, height - sigHeight - (height - sigHeight) * posYPercent));
+
+      page.drawImage(sigImage, {
+        x: sigX,
+        y: sigY,
+        width: sigWidth,
+        height: sigHeight
+      });
+
+      if (dateImage) {
+        const dateWidth = sigWidth * 0.9;
+        const dateHeight = dateWidth / dateAspect;
+        const dateX = sigX;
+        const dateY = Math.max(5, sigY - dateHeight - 4);
+        page.drawImage(dateImage, {
+          x: dateX,
+          y: dateY,
+          width: dateWidth,
+          height: dateHeight
+        });
+      }
+    }
+
+    if (onProgress) onProgress(90, 'กำลังบันทึกเอกสาร PDF สมบูรณ์...');
+    const pdfBytes = await doc.save();
+    return new Blob([pdfBytes], { type: 'application/pdf' });
   }
 };
 
