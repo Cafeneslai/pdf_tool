@@ -49,10 +49,10 @@ const PdfTools = {
    * Helper: Format file size to human readable string
    */
   formatSize: (bytes) => {
-    if (bytes === 0) return '0 B';
+    if (!bytes || isNaN(bytes) || bytes <= 0) return '0 B';
     const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.min(sizes.length - 1, Math.floor(Math.log(bytes) / Math.log(k)));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   },
 
@@ -512,7 +512,10 @@ const PdfTools = {
         viewport: viewport
       }).promise;
 
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, format, 0.92));
+      let blob = await new Promise(resolve => canvas.toBlob(resolve, format, 0.92));
+      if (!blob) {
+        blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      }
       canvas.width = 0;
       canvas.height = 0;
       imageResults.push({
@@ -793,7 +796,7 @@ const PdfTools = {
 
     if (onProgress) onProgress(30, 'กำลังแปลงภาพลายเซ็น...');
     
-    // Convert signature DataURL to PNG binary bytes
+    // Convert signature DataURL to binary bytes
     const base64Data = options.signatureDataUrl.split(',')[1];
     const binaryStr = atob(base64Data);
     const sigBytes = new Uint8Array(binaryStr.length);
@@ -801,7 +804,20 @@ const PdfTools = {
       sigBytes[i] = binaryStr.charCodeAt(i);
     }
 
-    const sigImage = await doc.embedPng(sigBytes);
+    let sigImage;
+    try {
+      if (options.signatureDataUrl.startsWith('data:image/jpeg') || options.signatureDataUrl.startsWith('data:image/jpg')) {
+        sigImage = await doc.embedJpg(sigBytes);
+      } else {
+        sigImage = await doc.embedPng(sigBytes);
+      }
+    } catch (embErr) {
+      try {
+        sigImage = await doc.embedJpg(sigBytes);
+      } catch (jpgErr) {
+        throw new Error('ไม่สามารถอ่านภาพลายเซ็นได้ กรุณาใช้ไฟล์รูปภาพ PNG หรือ JPG');
+      }
+    }
     const sigAspect = sigImage.width / sigImage.height;
 
     // Optional date stamp canvas
@@ -837,10 +853,16 @@ const PdfTools = {
 
     if (onProgress) onProgress(60, 'กำลังวางลายเซ็นลงบนหน้าเอกสาร...');
 
-    const targetPageNum = options.targetPage === 'all' ? 'all' : (parseInt(options.targetPage, 10) || totalPages);
-    const targetPages = targetPageNum === 'all' 
-      ? pages 
-      : [pages[Math.min(totalPages - 1, Math.max(0, targetPageNum - 1))]];
+    let targetPages = [];
+    if (options.targetPage === 'all') {
+      targetPages = pages;
+    } else if (options.targetPage === 'last' || options.targetPage === 'all-last') {
+      targetPages = [pages[totalPages - 1]];
+    } else {
+      const p = parseInt(options.targetPage, 10);
+      const targetIndex = isNaN(p) ? totalPages - 1 : Math.min(totalPages - 1, Math.max(0, p - 1));
+      targetPages = [pages[targetIndex]];
+    }
 
     const sizePercent = Math.min(60, Math.max(8, options.sizePercent || 25)) / 100;
     const posXPercent = Math.min(100, Math.max(0, options.posXPercent !== undefined ? options.posXPercent : 70)) / 100;

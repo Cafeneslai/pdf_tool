@@ -612,11 +612,39 @@
           <!-- Date Stamp Option -->
           <div class="form-group" style="margin-top: 1rem; background: var(--slate-50); padding: 12px 16px; border-radius: var(--radius-md); border: 1px solid var(--slate-200);">
             <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600;">
-              <input type="checkbox" id="signAddDate" onchange="document.getElementById('signDateInputGroup').style.display = this.checked ? 'block' : 'none'">
+              <input type="checkbox" id="signAddDate" onchange="PenguApp.handleSignDateToggle(this.checked)">
               <span>ประทับตราวันที่กำกับใต้ลายเซ็น</span>
             </label>
             <div id="signDateInputGroup" style="display: none; margin-top: 8px;">
-              <input type="text" id="signDateText" class="form-control" placeholder="เช่น 18 ต.ค. 2569 หรือ 18/10/2026">
+              <input type="text" id="signDateText" class="form-control" placeholder="เช่น 18 ต.ค. 2569 หรือ 18/10/2026" oninput="PenguApp.updateSignLivePreview()">
+            </div>
+          </div>
+
+          <!-- Live Placement Visual Preview -->
+          <div class="sign-preview-section" style="margin-top: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+              <label class="form-label" style="margin: 0; font-weight: 700; color: var(--slate-800);">
+                👁️ ตัวอย่างตำแหน่งจริงบนหน้ากระดาษ (Live Placement Preview)
+              </label>
+              <span style="font-size: 0.78rem; color: var(--slate-500); background: var(--slate-200); padding: 2px 8px; border-radius: 10px;">ขยับตามแถบเลื่อน</span>
+            </div>
+            <div class="sign-page-mockup-wrapper">
+              <div class="sign-page-mockup" id="signPageMockup">
+                <div class="mock-doc-line" style="width: 45%; height: 8px; background: var(--primary-200); margin-bottom: 14px;"></div>
+                <div class="mock-doc-line" style="width: 95%;"></div>
+                <div class="mock-doc-line" style="width: 88%;"></div>
+                <div class="mock-doc-line" style="width: 92%;"></div>
+                <div class="mock-doc-line" style="width: 70%;"></div>
+                <div class="mock-doc-line" style="width: 90%;"></div>
+                <div class="mock-doc-line" style="width: 85%;"></div>
+                <div class="mock-doc-line" style="width: 60%;"></div>
+
+                <div class="mock-signature-badge" id="mockSigBadge">
+                  <img id="mockSigImg" class="mock-sig-thumb" src="" alt="ลายเซ็น">
+                  <span id="mockSigText" style="font-size: 0.75rem; font-weight: 700; color: var(--primary-700);">✍️ ลายเซ็น</span>
+                  <span id="mockDateBadge" style="display: none; font-size: 0.65rem; color: var(--slate-600); font-weight: 600; margin-top: 2px;"></span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -636,7 +664,7 @@
 
         const blob = await window.PdfTools.signPdf(files[0], {
           signatureDataUrl: sigDataUrl,
-          targetPage: targetPage === 'last' ? 'all-last' : targetPage,
+          targetPage,
           posXPercent: posX,
           posYPercent: posY,
           sizePercent: size,
@@ -2335,8 +2363,15 @@
       ctx.lineTo(pos.x, pos.y);
       ctx.stroke();
     };
-    window.addEventListener('mouseup', () => {
+    canvas.onmouseup = () => {
       sigState.isDrawing = false;
+      updateSignLivePreview();
+    };
+    window.addEventListener('mouseup', () => {
+      if (sigState.isDrawing) {
+        sigState.isDrawing = false;
+        updateSignLivePreview();
+      }
     });
 
     canvas.ontouchstart = (e) => {
@@ -2357,7 +2392,10 @@
     canvas.ontouchend = (e) => {
       e.preventDefault();
       sigState.isDrawing = false;
+      updateSignLivePreview();
     };
+
+    updateSignLivePreview();
   }
 
   function clearSignature() {
@@ -2365,6 +2403,7 @@
     const dpr = window.devicePixelRatio || 1;
     sigState.ctx.clearRect(0, 0, sigState.canvas.width / dpr, sigState.canvas.height / dpr);
     sigState.hasDrawn = false;
+    updateSignLivePreview();
   }
 
   function setSignColor(color, el) {
@@ -2372,6 +2411,7 @@
     if (sigState.ctx) sigState.ctx.strokeStyle = color;
     document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
     if (el) el.classList.add('active');
+    updateSignLivePreview();
   }
 
   function setSignWidth(w) {
@@ -2396,6 +2436,7 @@
       if (drawArea) drawArea.style.display = 'none';
       if (uploadArea) uploadArea.style.display = 'block';
     }
+    updateSignLivePreview();
   }
 
   function handleSigFileSelect(input) {
@@ -2403,11 +2444,23 @@
     const file = input.files[0];
     const reader = new FileReader();
     reader.onload = (e) => {
-      sigState.uploadedDataUrl = e.target.result;
-      const preview = document.getElementById('sigImagePreview');
-      const img = document.getElementById('sigImgTag');
-      if (img) img.src = sigState.uploadedDataUrl;
-      if (preview) preview.style.display = 'block';
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth || img.width;
+        c.height = img.naturalHeight || img.height;
+        const ctx = c.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        sigState.uploadedDataUrl = c.toDataURL('image/png');
+        c.width = 0;
+        c.height = 0;
+        const preview = document.getElementById('sigImagePreview');
+        const imgTag = document.getElementById('sigImgTag');
+        if (imgTag) imgTag.src = sigState.uploadedDataUrl;
+        if (preview) preview.style.display = 'block';
+        updateSignLivePreview();
+      };
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   }
@@ -2458,6 +2511,54 @@
     if (sizeBadge) sizeBadge.textContent = `${size}%`;
     if (posXBadge) posXBadge.textContent = `${posX}%`;
     if (posYBadge) posYBadge.textContent = `${posY}%`;
+    updateSignLivePreview();
+  }
+
+  function handleSignDateToggle(checked) {
+    const group = document.getElementById('signDateInputGroup');
+    if (group) group.style.display = checked ? 'block' : 'none';
+    updateSignLivePreview();
+  }
+
+  function updateSignLivePreview() {
+    const badge = document.getElementById('mockSigBadge');
+    if (!badge) return;
+
+    const size = parseInt(document.getElementById('signSizeSlider')?.value || '26', 10);
+    const posX = parseInt(document.getElementById('signPosXSlider')?.value || '70', 10);
+    const posY = parseInt(document.getElementById('signPosYSlider')?.value || '85', 10);
+
+    const left = ((100 - size) * posX) / 100;
+    const approxHeightPercent = Math.min(35, size * 0.45);
+    const top = ((100 - approxHeightPercent) * posY) / 100;
+
+    badge.style.left = `${left}%`;
+    badge.style.top = `${top}%`;
+    badge.style.width = `${size}%`;
+
+    const addDate = document.getElementById('signAddDate')?.checked;
+    const dateText = document.getElementById('signDateText')?.value || '';
+    const mockDateBadge = document.getElementById('mockDateBadge');
+    if (mockDateBadge) {
+      if (addDate) {
+        mockDateBadge.style.display = 'block';
+        mockDateBadge.textContent = dateText.trim() || 'วว/ดด/ปปปป';
+      } else {
+        mockDateBadge.style.display = 'none';
+      }
+    }
+
+    const mockSigImg = document.getElementById('mockSigImg');
+    const mockSigText = document.getElementById('mockSigText');
+    const dataUrl = getSignatureDataUrl();
+    if (dataUrl && mockSigImg && mockSigText) {
+      mockSigImg.src = dataUrl;
+      mockSigImg.style.display = 'block';
+      mockSigText.style.display = 'none';
+    } else if (mockSigImg && mockSigText) {
+      mockSigImg.style.display = 'none';
+      mockSigText.style.display = 'block';
+    }
   }
 
   async function populateSignPages(file) {
@@ -2547,6 +2648,8 @@
     handleSigFileSelect,
     applySignPreset,
     handleSignSliderChange,
+    handleSignDateToggle,
+    updateSignLivePreview,
     getSignatureDataUrl,
     installPwa
   };

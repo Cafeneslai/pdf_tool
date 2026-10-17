@@ -3,7 +3,7 @@
  * Offline Caching & Progressive Web App Engine
  */
 
-const CACHE_NAME = 'pengutools-v1.3.0';
+const CACHE_NAME = 'pengutools-v1.3.1';
 
 const PRECACHE_ASSETS = [
   './',

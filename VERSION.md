@@ -1,6 +1,6 @@
 # 🐧 PenguTools — ข้อมูลเวอร์ชันและบันทึกการเปลี่ยนแปลง (Version & Changelog)
 
-> **Current Version:** `v1.3.0`  
+> **Current Version:** `v1.3.1`  
 > **Release Date:** 2026-10-18  
 > **Architecture:** 100% Client-Side In-Browser Processing (Zero-Backend, PWA Installable, Offline Ready)  
 > **Maintainer:** Cafeneslai  
@@ -12,7 +12,8 @@
 
 | เวอร์ชัน | วันที่เผยแพร่ | สถานะ | สรุปไฮไลท์สำคัญ |
 | :--- | :--- | :--- | :--- |
-| **v1.3.0** | 2026-10-18 | **Current (Stable)** | เพิ่มเครื่องมือ **Sign PDF (เซ็นเอกสาร PDF ออนไลน์)**, ระบบ **Workflow Chaining (ส่งต่อไฟล์ข้ามเครื่องมือ)**, รองรับ **Progressive Web App (PWA) & Offline Mode** |
+| **v1.3.1** | 2026-10-18 | **Current (Stable)** | **Deep Bug Hunt & Resiliency:** แก้ไขบัค ZIP Inspector Index Mismatch, แก้ปัญหาภาพลายเซ็น JPG/WebP, ป้องกันชื่อไฟล์ซ้ำใน ZIP, เพิ่ม Live Placement Preview ใน Sign PDF, ปรับปรุงการจัดการ 0-byte/TB files |
+| **v1.3.0** | 2026-10-18 | Stable | เพิ่มเครื่องมือ **Sign PDF (เซ็นเอกสาร PDF ออนไลน์)**, ระบบ **Workflow Chaining (ส่งต่อไฟล์ข้ามเครื่องมือ)**, รองรับ **Progressive Web App (PWA) & Offline Mode** |
 | **v1.2.0** | 2026-10-17 | Stable | แก้ไขบัคความปลอดภัย (XSS), แก้ปัญหา Memory Leak (Canvas Buffers), รองรับเลขอารบิก-ไทย, ปรับปรุง Responsive & Touch ทุกหน้าจอ, เพิ่มระบบ Mobile Drawer Navigation |
 | **v1.1.0** | 2026-10-15 | Stable | เพิ่มเครื่องมือใหม่ 8 รายการ: Organize PDF, Unlock PDF, Watermark PDF, Compare Files, Inspect ZIP, ปรับแต่ง Dark Mode สมบูรณ์ |
 | **v1.0.0** | 2026-10-10 | Initial Release | เปิดตัว PenguTools พร้อม 10 เครื่องมือพื้นฐาน (PDF, Image, File Utilities) และมาสคอตน้องเพนกวิน |
@@ -20,6 +21,34 @@
 ---
 
 ## 🚀 บันทึกการเปลี่ยนแปลงฉบับละเอียด (Detailed Changelog)
+
+### [v1.3.1] — 2026-10-18 (Deep Bug Hunt, Resiliency & Live Visual Preview)
+
+#### 🐞 การแก้ไขบัคสำคัญ (Bug Fixes)
+1. **ZIP Inspector Entry Index Mismatch:**
+   - *สาเหตุเดิม:* ใน `inspectZip()` ดึง index `i` จากคีย์ไฟล์ทั้งหมดใน ZIP ซึ่งรวมถึง Folder Entries แต่ array `entries` กรองเฉพาะไฟล์ปกติ เมื่อ ZIP มีโฟลเดอร์อยู่ข้างหน้า ทำให้ค่า `index` คลาดเคลื่อนจน `downloadZipEntryByIndex(index)` อ่านได้ `undefined` และเกิดข้อผิดพลาด
+   - *การแก้ไข:* ปรับให้กำหนด `index: entries.length` อย่างเคร่งครัด พร้อมเพิ่มการค้นหาด้วยชื่อไฟล์ (`item.name`) เป็น Fallback ป้องกันการแครช 100%
+2. **Resilient Signature Image Embedding (`sign-pdf`):**
+   - *สาเหตุเดิม:* เมื่อผู้ใช้อัปโหลดลายเซ็นเป็นไฟล์ JPG หรือ WebP ตัวฟังก์ชันเรียก `doc.embedPng(sigBytes)` ซึ่งโยนข้อผิดพลาด Unhandled Error ทันที
+   - *การแก้ไข:* ใน `handleSigFileSelect` นำภาพมาวาดผ่าน Off-screen Canvas เพื่อ Normalization เป็น PNG Data URL ที่มีช่อง Alpha โปร่งใส และใน `signPdf` ตรวจสอบ Magic Bytes / MIME Type เพื่อเรียก `embedJpg` หรือ `embedPng` ตามจริง พร้อมมี Try-Catch Fallback
+3. **Explicit Page Handling in `sign-pdf`:**
+   - *การแก้ไข:* แยกเงื่อนไขการเลือกหน้าอย่างชัดเจนสำหรับ `'last'`, `'all'`, `'all-last'` และเลขหน้า 1-based index เพื่อป้องกันกรณีที่ `parseInt('all-last')` แปลงเป็น `NaN`
+4. **ZIP Filename Collision Prevention:**
+   - *สาเหตุเดิม:* หากผู้ใช้เลือกไฟล์ที่มีชื่อซ้ำกันจากคนละโฟลเดอร์เพื่อรวมเป็น ZIP ตัวไลบรารี JSZip จะเขียนทับไฟล์เดิมโดยไม่แจ้งเตือน
+   - *การแก้ไข:* เพิ่มระบบตรวจจับชื่อไฟล์ซ้ำใน `zipFiles`, `compressMultipleImages` และ `convertMultipleImages` โดยจะเติมหมายเลขลำดับต่อท้ายอัตโนมัติ (เช่น `file_2.pdf`)
+5. **0-Byte & TB File Handling in `formatSize`:**
+   - *การแก้ไข:* ป้องกันข้อผิดพลาด `Math.log(0)` หรือ `Math.log(negative)` ที่อาจคืนค่า `NaN undefined` โดยกำหนด Guard Clause คืนค่า `'0 B'` และรองรับหน่วยขนาดไฟล์ถึงระดับ `TB`
+6. **Canvas Blob Null Fallback & Division-by-Zero:**
+   - *การแก้ไข:* ป้องกันเบราว์เซอร์คืนค่า `null` จาก `canvas.toBlob()` ใน `image-resizer`, `image-converter` และ `pdf-to-images` ด้วยการ Fallback ไปยัง PNG อัตโนมัติ พร้อมป้องกันการคำนวณ `savedPercent` หารด้วย 0 เมื่อเจอไฟล์ 0 ไบต์
+
+#### ✨ ฟีเจอร์และการปรับปรุง UX
+- **Live Placement Visual Preview สำหรับ Sign PDF:**
+  - เพิ่มการ์ดจำลองหน้ากระดาษ A4 ในส่วนตั้งค่าของ Sign PDF
+  - มีกล่องลายเซ็นและตราประทับวันที่จำลองที่ขยับตำแหน่งและปรับขนาดตามแถบสไลเดอร์ (X, Y, Size) และ Presets แบบ Real-Time ให้ผู้ใช้เห็นภาพจริงก่อนกดบันทึก
+- **Sync Version Badge & PWA Cache:**
+  - อัปเดต Brand Badge ในหน้าเว็บและ Cache Engine ใน `sw.js` เป็น `v1.3.1` สมบูรณ์
+
+---
 
 ### [v1.3.0] — 2026-10-18 (Sign PDF, Workflow Chaining & PWA Offline Engine)
 

@@ -1,7 +1,7 @@
 # PenguTools — Cute Online File Toolkit 🐧
 > *Small Penguin, Big File Solutions!* — เครื่องมือจัดการไฟล์ออนไลน์น่ารัก สบายตา ปลอดภัย 100%
 
-[![Version](https://img.shields.io/badge/version-v1.3.0-0284c7.svg)](VERSION.md)
+[![Version](https://img.shields.io/badge/version-v1.3.1-0284c7.svg)](VERSION.md)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Architecture](https://img.shields.io/badge/architecture-100%25%20Client--Side-10b981.svg)](#-จุดเด่นสำคัญ)
 [![PWA Ready](https://img.shields.io/badge/PWA-offline%20ready-8b5cf6.svg)](#-progressive-web-app-pwa--offline-mode)
@@ -41,7 +41,7 @@
 
 ### 1. หมวด PDF Tools (11 เครื่องมือ)
 - **Merge PDF (รวมไฟล์ PDF)** — รวมไฟล์ PDF หลายไฟล์ (2-30 ไฟล์) พร้อมปุ่มจัดเรียงลำดับไฟล์ (เลื่อนขึ้น-ลง) และลบไฟล์ก่อนรวม
-- **Sign PDF (เซ็นเอกสาร PDF ออนไลน์)** — วาดลายเซ็นด้วยนิ้วมือบนมือถือหรือเมาส์บนคอมพิวเตอร์ หรืออัปโหลดภาพลายเซ็น วางลงบนหน้าเอกสาร ปรับตำแหน่งและขนาดได้อิสระ พร้อมประทับตราวันที่กำกับ
+- **Sign PDF (เซ็นเอกสาร PDF ออนไลน์)** — วาดลายเซ็นด้วยนิ้วมือบนมือถือหรือเมาส์บนคอมพิวเตอร์ หรืออัปโหลดภาพลายเซ็น วางลงบนหน้าเอกสาร ปรับตำแหน่งและขนาดได้อิสระ พร้อมระบบ Live Placement Preview แสดงตำแหน่งจริงบนหน้ากระดาษจำลอง และประทับตราวันที่กำกับ
 - **Organize PDF (จัดเรียง ลบ หมุนหน้า PDF)** — จัดระเบียบหน้าเอกสารแบบเห็นภาพพรีวิว (Thumbnail) ทุกหน้า ลากสลับตำแหน่ง หมุนองศา หรือลบหน้าที่ไม่ต้องการออกได้อิสระ
 - **Split PDF (แยกไฟล์ PDF)** — แยกเอกสารตามช่วงหน้าที่กำหนด (เช่น `1-3, 5` หรือ `๑-๓, ๕`) เป็นไฟล์ใหม่ หรือแยกทุกหน้าเป็นไฟล์เดี่ยวใน ZIP
 - **Compress PDF (บีบอัด PDF)** — ระบบบีบอัด 2 โหมด: โหมด Smart Visual Downsampling (บีบอัดภาพในเอกสาร ลดขนาดได้จริง 40-90%) และโหมด Structural Compression พร้อมเปรียบเทียบขนาดไบต์จริงก่อนและหลัง

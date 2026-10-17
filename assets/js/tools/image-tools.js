@@ -116,7 +116,9 @@ const ImageTools = {
     const originalSize = file.size;
     const newSize = blob.size;
     const savedBytes = originalSize - newSize;
-    const savedPercent = Number((((originalSize - newSize) / originalSize) * 100).toFixed(1));
+    const savedPercent = originalSize > 0 
+      ? Number((((originalSize - newSize) / originalSize) * 100).toFixed(1)) 
+      : 0;
     const isReduced = newSize < originalSize;
 
     let ext = 'jpg';
@@ -178,7 +180,10 @@ const ImageTools = {
     ctx.drawImage(img, 0, 0, width, height);
 
     if (onProgress) onProgress(90, 'กำลังบันทึกภาพ...');
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, format, quality));
+    let blob = await new Promise(resolve => canvas.toBlob(resolve, format, quality));
+    if (!blob) {
+      blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    }
     canvas.width = 0;
     canvas.height = 0;
 
@@ -224,7 +229,10 @@ const ImageTools = {
     ctx.drawImage(img, 0, 0);
 
     if (onProgress) onProgress(80, 'กำลังแปลงฟอร์แมต...');
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, targetFormat, quality));
+    let blob = await new Promise(resolve => canvas.toBlob(resolve, targetFormat, quality));
+    if (!blob) {
+      blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    }
     canvas.width = 0;
     canvas.height = 0;
 
@@ -274,12 +282,28 @@ const ImageTools = {
     if (onProgress) onProgress(93, 'กำลังรวบรวมรูปภาพทั้งหมดเป็นไฟล์ ZIP...');
     if (!window.JSZip) throw new Error('ไม่พบไลบรารี JSZip สำหรับรวมไฟล์');
     const zip = new window.JSZip();
+    const seenNames = new Map();
     for (const res of results) {
-      zip.file(res.filename, res.blob);
+      let finalName = res.filename;
+      if (seenNames.has(finalName)) {
+        const count = seenNames.get(finalName) + 1;
+        seenNames.set(finalName, count);
+        const lastDot = finalName.lastIndexOf('.');
+        if (lastDot > 0) {
+          finalName = `${finalName.substring(0, lastDot)}_${count}${finalName.substring(lastDot)}`;
+        } else {
+          finalName = `${finalName}_${count}`;
+        }
+      } else {
+        seenNames.set(finalName, 1);
+      }
+      zip.file(finalName, res.blob);
     }
     const zipBlob = await zip.generateAsync({ type: 'blob' });
     const savedBytes = totalOrigBytes - totalNewBytes;
-    const savedPercent = Number((((totalOrigBytes - totalNewBytes) / totalOrigBytes) * 100).toFixed(1));
+    const savedPercent = totalOrigBytes > 0 
+      ? Number((((totalOrigBytes - totalNewBytes) / totalOrigBytes) * 100).toFixed(1)) 
+      : 0;
 
     if (onProgress) onProgress(100, 'บีบอัดรูปภาพทั้งหมดเสร็จสิ้น!');
 
@@ -328,8 +352,22 @@ const ImageTools = {
     if (onProgress) onProgress(93, 'กำลังรวบรวมรูปภาพเป็นไฟล์ ZIP...');
     if (!window.JSZip) throw new Error('ไม่พบไลบรารี JSZip');
     const zip = new window.JSZip();
+    const seenNames = new Map();
     for (const res of results) {
-      zip.file(res.filename, res.blob);
+      let finalName = res.filename;
+      if (seenNames.has(finalName)) {
+        const count = seenNames.get(finalName) + 1;
+        seenNames.set(finalName, count);
+        const lastDot = finalName.lastIndexOf('.');
+        if (lastDot > 0) {
+          finalName = `${finalName.substring(0, lastDot)}_${count}${finalName.substring(lastDot)}`;
+        } else {
+          finalName = `${finalName}_${count}`;
+        }
+      } else {
+        seenNames.set(finalName, 1);
+      }
+      zip.file(finalName, res.blob);
     }
     const zipBlob = await zip.generateAsync({ type: 'blob' });
 

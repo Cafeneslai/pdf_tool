@@ -18,13 +18,19 @@ const FileTools = {
    * Helper: Detect real file signature from Magic Bytes
    */
   detectMagicBytes: async (file) => {
+    if (!file || file.size === 0) {
+      return {
+        hexSignature: '00 (Empty)',
+        detectedType: 'ไฟล์ว่างเปล่า (Empty File 0 Bytes)'
+      };
+    }
+
     const slice = file.slice(0, 16);
     const buffer = await slice.arrayBuffer();
     const bytes = new Uint8Array(buffer);
     const hex = Array.from(bytes).map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
 
     let detectedType = 'Unknown / Binary';
-    let isMatched = true;
 
     // Signatures
     if (bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
@@ -55,6 +61,7 @@ const FileTools = {
    * Helper: Format network transfer time
    */
   calculateTransferTime: (bytes, speedMbps) => {
+    if (!bytes || bytes <= 0) return '0 วินาที';
     const bits = bytes * 8;
     const speedBps = speedMbps * 1000 * 1000;
     const seconds = bits / speedBps;
@@ -73,7 +80,7 @@ const FileTools = {
    * 1. File Size Checker
    */
   checkFileSize: (file) => {
-    const bytes = file.size;
+    const bytes = file.size || 0;
     const kb = (bytes / 1024).toFixed(2);
     const mb = (bytes / (1024 * 1024)).toFixed(3);
     const gb = (bytes / (1024 * 1024 * 1024)).toFixed(4);
@@ -106,11 +113,28 @@ const FileTools = {
     const zip = new window.JSZip();
 
     const total = fileList.length;
+    const seenNames = new Map();
+
     for (let i = 0; i < total; i++) {
       const file = fileList[i];
       if (onProgress) onProgress(Math.round(((i) / total) * 85), `กำลังบีบอัดไฟล์ ${i + 1}/${total}: ${file.name}...`);
+      
+      let finalName = file.name;
+      if (seenNames.has(finalName)) {
+        const count = seenNames.get(finalName) + 1;
+        seenNames.set(finalName, count);
+        const lastDot = finalName.lastIndexOf('.');
+        if (lastDot > 0) {
+          finalName = `${finalName.substring(0, lastDot)}_${count}${finalName.substring(lastDot)}`;
+        } else {
+          finalName = `${finalName}_${count}`;
+        }
+      } else {
+        seenNames.set(finalName, 1);
+      }
+
       const buffer = await file.arrayBuffer();
-      zip.file(file.name, buffer);
+      zip.file(finalName, buffer);
     }
 
     if (onProgress) onProgress(90, 'กำลังจัดทำไฟล์ ZIP สมบูรณ์...');
@@ -251,7 +275,7 @@ const FileTools = {
         const entrySize = zipEntry._data ? (zipEntry._data.uncompressedSize || 0) : 0;
         totalUncompressedSize += entrySize;
         entries.push({
-          index: i,
+          index: entries.length,
           name: fileName,
           date: zipEntry.date ? new Date(zipEntry.date).toLocaleString('th-TH') : '-',
           size: entrySize,
@@ -277,13 +301,21 @@ const FileTools = {
   },
 
   /**
-   * Helper: Extract and download a single file from the loaded ZIP by entry index
+   * Helper: Extract and download a single file from the loaded ZIP by entry index or name
    */
-  downloadZipEntryByIndex: async (index) => {
+  downloadZipEntryByIndex: async (indexOrName) => {
     if (!window._currentInspectedZip || !window._currentInspectedZipEntries) {
       throw new Error('ไม่พบข้อมูลไฟล์ ZIP กรุณาเปิดไฟล์อีกครั้ง');
     }
-    const item = window._currentInspectedZipEntries[index];
+    let item;
+    if (typeof indexOrName === 'number') {
+      item = window._currentInspectedZipEntries[indexOrName];
+    } else if (typeof indexOrName === 'string') {
+      item = window._currentInspectedZipEntries.find(e => e.name === indexOrName);
+    }
+    if (!item && typeof indexOrName === 'string') {
+      item = { name: indexOrName };
+    }
     if (!item) {
       throw new Error('ไม่พบข้อมูลไฟล์ที่เลือกใน ZIP');
     }
