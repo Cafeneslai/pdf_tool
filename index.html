@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  
+  <!-- SEO & Social Meta Tags -->
+  <title>PenguTools — Cute Online File Toolkit 🐧 Small Penguin, Big File Solutions!</title>
+  <meta name="description" content="PenguTools รวมเครื่องมือจัดการไฟล์ PDF รูปภาพ และยูทิลิตี้จำเป็น ใช้งานง่าย ไม่ต้องสมัครสมาชิก ปลอดภัย 100% ด้วยการประมวลผลบนเบราว์เซอร์ของคุณ">
+  <meta name="keywords" content="รวมไฟล์ PDF, แยกไฟล์ PDF, บีบอัด PDF, หมุนหน้า PDF, แปลงรูปเป็น PDF, บีบอัดภาพ, ตรวจสอบขนาดไฟล์, รวมไฟล์ zip, pengutools">
+  <meta name="theme-color" content="#0284c7">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="PenguTools — Cute Online File Toolkit 🐧">
+  <meta property="og:description" content="Small Penguin, Big File Solutions! จัดการไฟล์ PDF และรูปภาพง่าย ๆ ในสไตล์เพนกวิน">
+  <meta property="og:image" content="./assets/images/og-preview.png">
+
+  <!-- Favicon (Inline Cute Penguin SVG) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Ccircle cx='24' cy='24' r='22' fill='%23e0f2fe'/%3E%3Cellipse cx='24' cy='28' rx='15' ry='14' fill='%231e293b'/%3E%3Cellipse cx='24' cy='30' rx='10' ry='10' fill='%23ffffff'/%3E%3Cpath d='M15 22 Q24 19 33 22 Q24 25 15 22 Z' fill='%230284c7'/%3E%3Ccircle cx='24' cy='16' r='11' fill='%231e293b'/%3E%3Ccircle cx='20' cy='15' r='1.6' fill='%230f172a'/%3E%3Ccircle cx='28' cy='15' r='1.6' fill='%230f172a'/%3E%3Cpath d='M22 17 Q24 16 26 17 Q24 20 22 17 Z' fill='%23f59e0b'/%3E%3C/svg%3E">
+
+  <!-- Google Fonts: Prompt & Kanit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="./assets/css/style.css">
+</head>
+<body>
+
+  <!-- Top Navigation Header -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a href="#/" class="brand-link" id="brandLogoLink">
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="โลโก้ PenguTools">
+          <circle cx="24" cy="24" r="22" fill="#E0F2FE" />
+          <ellipse cx="24" cy="28" rx="15" ry="14" fill="#1E293B" />
+          <ellipse cx="24" cy="30" rx="10" ry="10" fill="#FFFFFF" />
+          <path d="M15 22 Q24 19 33 22 Q24 25 15 22 Z" fill="#0284C7" />
+          <circle cx="24" cy="16" r="11" fill="#1E293B" />
+          <path d="M16 16 C16 12 19 10 22 12 C23 13 25 13 26 12 C29 10 32 12 32 16 C32 20 29 21 24 21 C19 21 16 20 16 16 Z" fill="#FFFFFF" />
+          <circle cx="20" cy="15" r="1.6" fill="#0F172A" />
+          <circle cx="28" cy="15" r="1.6" fill="#0F172A" />
+          <path d="M22 17 Q24 16 26 17 Q24 20 22 17 Z" fill="#F59E0B" />
+        </svg>
+        <div class="brand-title">
+          <span class="brand-name">PenguTools</span>
+          <span class="brand-badge">v1.0</span>
+        </div>
+      </a>
+
+      <nav aria-label="เมนูหลัก" class="desktop-nav">
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="#/" id="navHome">
+              <span>🏠</span>
+              <span class="nav-text">หน้าแรก</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#/category/pdf" id="navPdf">
+              <span>📑</span>
+              <span class="nav-text">PDF Tools</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#/category/image" id="navImage">
+              <span>🖼️</span>
+              <span class="nav-text">Image Tools</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#/category/file" id="navFile">
+              <span>📦</span>
+              <span class="nav-text">Utilities</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <div class="nav-privacy-pill">
+              <span>🔒</span>
+              <span>ประมวลผลบนเครื่อง 100%</span>
+            </div>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="header-right-actions">
+        <button type="button" class="theme-toggle-btn" id="themeToggleBtn" aria-label="สลับโหมดมืด/สว่าง" title="สลับโหมดมืด/สว่าง">
+          <span id="themeToggleIcon">🌙</span>
+        </button>
+
+        <button type="button" class="mobile-menu-btn" id="mobileMenuBtn" aria-label="เปิดเมนูนำทาง" aria-expanded="false" onclick="PenguApp.toggleMobileMenu()">
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Navigation Backdrop & Drawer -->
+  <div class="mobile-nav-backdrop" id="mobileNavBackdrop" onclick="PenguApp.closeMobileMenu()"></div>
+  <div class="mobile-nav-drawer" id="mobileNavDrawer" aria-label="เมนูบนมือถือ">
+    <div class="mobile-drawer-header">
+      <div class="brand-title">
+        <span style="font-size: 1.4rem;">🐧</span>
+        <span class="brand-name">PenguTools</span>
+        <span class="brand-badge">v1.0</span>
+      </div>
+      <button type="button" class="btn-icon-subtle mobile-drawer-close" onclick="PenguApp.closeMobileMenu()" aria-label="ปิดเมนู">✕</button>
+    </div>
+    <div class="mobile-drawer-body">
+      <ul class="mobile-nav-list">
+        <li>
+          <a href="#/" id="mobileNavHome" class="mobile-nav-link" onclick="PenguApp.closeMobileMenu()">
+            <span class="mobile-nav-icon">🏠</span>
+            <div class="mobile-nav-text">
+              <span class="mobile-nav-title">หน้าแรก</span>
+              <span class="mobile-nav-desc">รวมเครื่องมือจัดการไฟล์ทั้งหมด</span>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="#/category/pdf" id="mobileNavPdf" class="mobile-nav-link" onclick="PenguApp.closeMobileMenu()">
+            <span class="mobile-nav-icon">📑</span>
+            <div class="mobile-nav-text">
+              <span class="mobile-nav-title">PDF Tools</span>
+              <span class="mobile-nav-desc">รวม, แยก, บีบอัด, จัดหน้า PDF</span>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="#/category/image" id="mobileNavImage" class="mobile-nav-link" onclick="PenguApp.closeMobileMenu()">
+            <span class="mobile-nav-icon">🖼️</span>
+            <div class="mobile-nav-text">
+              <span class="mobile-nav-title">Image Tools</span>
+              <span class="mobile-nav-desc">บีบอัด, ปรับขนาด, แปลงรูปภาพ</span>
+            </div>
+          </a>
+        </li>
+        <li>
+          <a href="#/category/file" id="mobileNavFile" class="mobile-nav-link" onclick="PenguApp.closeMobileMenu()">
+            <span class="mobile-nav-icon">📦</span>
+            <div class="mobile-nav-text">
+              <span class="mobile-nav-title">File Utilities</span>
+              <span class="mobile-nav-desc">เช็คขนาด, ดู ZIP, เปรียบเทียบไฟล์</span>
+            </div>
+          </a>
+        </li>
+      </ul>
+
+      <div class="mobile-drawer-footer">
+        <div class="mobile-privacy-pill">
+          <span>🔒</span>
+          <span>ประมวลผลบนเครื่อง 100% ปลอดภัย ไม่ส่งไฟล์ขึ้นเซิร์ฟเวอร์</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Application Main Area (SPA Target) -->
+  <main id="app">
+    <!-- Populated dynamically by app.js router -->
+  </main>
+
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.5rem;">🐧</span>
+            <strong style="font-size: 1.2rem; color: var(--slate-900);">PenguTools</strong>
+          </div>
+          <p class="footer-desc">
+            Small Penguin, Big File Solutions! เว็บรวมเครื่องมือจัดการไฟล์น่ารัก สบายตา รวดเร็ว และให้ความสำคัญกับความเป็นส่วนตัวของคุณเป็นอันดับหนึ่ง
+          </p>
+          <div style="font-size: 0.85rem; color: var(--success-700); background: var(--success-50); padding: 6px 12px; border-radius: var(--radius-sm); border: 1px solid rgba(16,185,129,0.2); display: inline-block; max-width: 320px;">
+            🔒 ไฟล์ของคุณไม่ถูกอัปโหลดหรือบันทึกบนเซิร์ฟเวอร์
+          </div>
+        </div>
+
+        <div class="footer-col">
+          <h4>เครื่องมือ PDF ยอดนิยม</h4>
+          <ul class="footer-links">
+            <li><a href="#/merge-pdf">รวมไฟล์ PDF (Merge)</a></li>
+            <li><a href="#/organize-pdf">จัดเรียง ลบ หมุนหน้า PDF (Organize)</a></li>
+            <li><a href="#/split-pdf">แยกไฟล์ PDF (Split)</a></li>
+            <li><a href="#/compress-pdf">บีบอัด PDF (Compress)</a></li>
+            <li><a href="#/watermark-pdf">ใส่เลขหน้าและลายน้ำ PDF</a></li>
+            <li><a href="#/rotate-pdf">หมุนหน้า PDF (Rotate)</a></li>
+            <li><a href="#/extract-pdf">ดึงหน้า PDF ที่เลือก (Extract)</a></li>
+            <li><a href="#/unlock-pdf">ปลดล็อกรหัสผ่าน PDF (Unlock)</a></li>
+            <li><a href="#/images-to-pdf">แปลงภาพเป็น PDF</a></li>
+            <li><a href="#/pdf-to-images">แปลง PDF เป็นรูปภาพ</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h4>รูปภาพและยูทิลิตี้</h4>
+          <ul class="footer-links">
+            <li><a href="#/image-compressor">บีบอัดรูปภาพ (Compressor)</a></li>
+            <li><a href="#/image-resizer">ปรับขนาดรูปภาพ (Resizer)</a></li>
+            <li><a href="#/image-converter">แปลงนามสกุลรูปภาพ</a></li>
+            <li><a href="#/file-size-checker">ตรวจสอบขนาดไฟล์</a></li>
+            <li><a href="#/compare-files">เปรียบเทียบไฟล์ (Compare)</a></li>
+            <li><a href="#/inspect-zip">เปิดดูและแตกไฟล์ ZIP</a></li>
+            <li><a href="#/zip-files">รวมไฟล์เป็น ZIP</a></li>
+            <li><a href="#/file-info">ดูข้อมูลไฟล์เชิงลึก</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <div>
+          © 2026 PenguTools. ออกแบบเพื่อความสะดวก ปลอดภัย และใช้งานได้ฟรีโดยไม่ต้องสมัครสมาชิก
+        </div>
+        <div>
+          พร้อมติดตั้งบน Shared Hosting / <code>public_html</code> ได้ทันที
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bundled Standalone Libraries (Local Offline Bundles) -->
+  <script src="./assets/libs/pdf-lib.min.js"></script>
+  <script src="./assets/libs/pdf.min.js"></script>
+  <script src="./assets/libs/jszip.min.js"></script>
+
+  <!-- Application Modules -->
+  <script src="./assets/js/mascot.js"></script>
+  <script src="./assets/js/tools/pdf-tools.js"></script>
+  <script src="./assets/js/tools/image-tools.js"></script>
+  <script src="./assets/js/tools/file-tools.js"></script>
+  <script src="./assets/js/app.js"></script>
+</body>
+</html>
