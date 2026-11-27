@@ -1,7 +1,7 @@
 # 🐧 PenguTools — ข้อมูลเวอร์ชันและบันทึกการเปลี่ยนแปลง (Version & Changelog)
 
-> **Current Version:** `v1.3.1`  
-> **Release Date:** 2026-10-18  
+> **Current Version:** `v1.4.0`  
+> **Release Date:** 2026-11-27  
 > **Architecture:** 100% Client-Side In-Browser Processing (Zero-Backend, PWA Installable, Offline Ready)  
 > **Maintainer:** Cafeneslai  
 > **Repository:** [https://github.com/Cafeneslai/pdf_tool.git](https://github.com/Cafeneslai/pdf_tool.git)
@@ -12,7 +12,8 @@
 
 | เวอร์ชัน | วันที่เผยแพร่ | สถานะ | สรุปไฮไลท์สำคัญ |
 | :--- | :--- | :--- | :--- |
-| **v1.3.1** | 2026-10-18 | **Current (Stable)** | **Deep Bug Hunt & Resiliency:** แก้ไขบัค ZIP Inspector Index Mismatch, แก้ปัญหาภาพลายเซ็น JPG/WebP, ป้องกันชื่อไฟล์ซ้ำใน ZIP, เพิ่ม Live Placement Preview ใน Sign PDF, ปรับปรุงการจัดการ 0-byte/TB files |
+| **v1.4.0** | 2026-11-27 | **Current (Stable)** | **Security & Correctness:** Unlock PDF ใช้งานได้จริง, ป้องกัน CVE-2024-4367, แก้รูปเอียงจาก EXIF, ลายน้ำ/ลายเซ็นบนหน้าที่หมุน + เพิ่ม Protect PDF, PDF to Text, คลิกวางลายเซ็นบนหน้าจริง, PWA Share Target |
+| v1.3.1 | 2026-10-18 | Stable | **Deep Bug Hunt & Resiliency:** แก้ไขบัค ZIP Inspector Index Mismatch, แก้ปัญหาภาพลายเซ็น JPG/WebP, ป้องกันชื่อไฟล์ซ้ำใน ZIP, เพิ่ม Live Placement Preview ใน Sign PDF, ปรับปรุงการจัดการ 0-byte/TB files |
 | **v1.3.0** | 2026-10-18 | Stable | เพิ่มเครื่องมือ **Sign PDF (เซ็นเอกสาร PDF ออนไลน์)**, ระบบ **Workflow Chaining (ส่งต่อไฟล์ข้ามเครื่องมือ)**, รองรับ **Progressive Web App (PWA) & Offline Mode** |
 | **v1.2.0** | 2026-10-17 | Stable | แก้ไขบัคความปลอดภัย (XSS), แก้ปัญหา Memory Leak (Canvas Buffers), รองรับเลขอารบิก-ไทย, ปรับปรุง Responsive & Touch ทุกหน้าจอ, เพิ่มระบบ Mobile Drawer Navigation |
 | **v1.1.0** | 2026-10-15 | Stable | เพิ่มเครื่องมือใหม่ 8 รายการ: Organize PDF, Unlock PDF, Watermark PDF, Compare Files, Inspect ZIP, ปรับแต่ง Dark Mode สมบูรณ์ |
@@ -21,6 +22,28 @@
 ---
 
 ## 🚀 บันทึกการเปลี่ยนแปลงฉบับละเอียด (Detailed Changelog)
+
+### [v1.4.0] — 2026-11-27 (Security, Correctness & New Tools)
+
+#### 🐞 การแก้ไขบัค (Bug Fixes)
+1. **Unlock PDF ใช้งานไม่ได้:** pdf-lib เดิมไม่รองรับการถอดรหัส ทำให้แจ้ง "รหัสผ่านไม่ถูกต้อง" ทุกครั้ง — เปลี่ยนเป็น `@cantoo/pdf-lib` 2.11.1 (fork ที่ API เดิม + รองรับเข้า/ถอดรหัส) และลบ Encryption Dictionary ที่ค้างอยู่ออกเพื่อให้ไฟล์ผลลัพธ์ปลดล็อกจริง พร้อมแจ้งเตือนเมื่อไฟล์ไม่ได้ล็อกอยู่แล้ว
+2. **ช่องโหว่ pdf.js CVE-2024-4367:** เปิด PDF ด้วย `isEvalSupported: false` ทุกจุด ป้องกันการรันโค้ดจากฟอนต์ที่ถูกดัดแปลง
+3. **รูปจากมือถือเอียงใน Images to PDF:** อ่านค่า EXIF Orientation แล้ววาดผ่าน Canvas ให้ภาพตั้งตรง และตรวจชนิดไฟล์จาก Magic Bytes (ไฟล์ PNG ที่ตั้งชื่อ .jpg ก็ใช้ได้)
+4. **Image Resizer ได้ไฟล์ PNG เสมอ:** คงฟอร์แมตต้นฉบับ (JPG/WebP) ไว้ ไม่ทำให้ไฟล์บวม
+5. **XSS ผ่านชื่อไฟล์:** escape ชื่อไฟล์ในปุ่มดาวน์โหลดและค่าในช่องค้นหา
+6. **ไฟล์ .webp ที่ข้างในเป็น PNG:** ตรวจ `blob.type` จริงจากเบราว์เซอร์ (เช่น Safari) แล้วตั้งนามสกุลให้ตรง
+7. **หน้าเอกสารใหญ่เกินขีดจำกัด Canvas:** จำกัดความละเอียดอัตโนมัติ (≤16.7M px) และแจ้งข้อความที่เข้าใจได้แทนการแครช
+8. **หน่วยความจำรั่วจาก pdf.js:** เรียก `pdf.destroy()` / `page.cleanup()` หลังใช้งาน
+9. **ลายน้ำ เลขหน้า ลายเซ็นบนหน้าที่ถูกหมุน (/Rotate):** คำนวณตำแหน่งตามหน้าที่แสดงจริง และย่อลายน้ำยาวไม่ให้ล้นหน้า
+10. **อื่น ๆ:** กรองชนิดไฟล์เมื่อลากวาง, ตราวันที่ไม่ทับลายเซ็นเมื่ออยู่ขอบล่าง, ไม่ผูก listener ซ้ำทุกครั้งที่เลือกไฟล์, ตรวจ `.PDF` แบบไม่สนตัวพิมพ์
+
+#### ✨ ฟีเจอร์ใหม่
+- **Protect PDF (ล็อกรหัสผ่าน PDF):** ตั้งรหัสผ่านเปิดไฟล์ + รหัสเจ้าของ + สิทธิ์พิมพ์/คัดลอก/แก้ไข
+- **PDF to Text (ดึงข้อความ):** ดึงข้อความรวมภาษาไทยเป็น `.txt` พร้อมพรีวิวและปุ่มคัดลอก
+- **Sign PDF – คลิกวางบนหน้าจริง:** พรีวิวเรนเดอร์หน้าที่เลือกจริง คลิกเพื่อวางลายเซ็น และตำแหน่งพรีวิวคำนวณสูตรเดียวกับไฟล์ผลลัพธ์
+- **PWA Share Target:** แชร์ไฟล์จากแอปอื่นเข้ามาแล้วเลือกเครื่องมือได้ทันที (หน้า `#/shared`)
+
+---
 
 ### [v1.3.1] — 2026-10-18 (Deep Bug Hunt, Resiliency & Live Visual Preview)
 

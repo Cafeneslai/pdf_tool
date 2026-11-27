@@ -9,6 +9,19 @@
   "theme_color": "#0284c7",
   "orientation": "any",
   "categories": ["utilities", "productivity"],
+  "share_target": {
+    "action": "./share-target",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "files": [
+        {
+          "name": "files",
+          "accept": ["application/pdf", ".pdf", "image/*", "application/zip", ".zip"]
+        }
+      ]
+    }
+  },
   "icons": [
     {
       "src": "./assets/images/icon.svg",

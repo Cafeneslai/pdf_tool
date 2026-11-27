@@ -3267,3 +3267,38 @@ input[type="range"].range-slider::-moz-range-thumb {
 }
 
 
+
+/* Sign PDF: real page preview with click-to-place */
+.sign-page-mockup {
+  cursor: crosshair;
+}
+
+.sign-page-mockup.has-page {
+  height: auto;
+  padding: 0;
+  background-color: #ffffff;
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+}
+
+.sign-page-mockup.has-page .mock-doc-line {
+  display: none;
+}
+
+.sign-page-mockup.has-page .mock-signature-badge {
+  padding: 0;
+  justify-content: flex-start;
+}
+
+.sign-page-mockup.has-page .mock-sig-thumb {
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+}
+
+.sign-page-mockup.has-page #mockDateBadge {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  white-space: nowrap;
+}

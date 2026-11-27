@@ -46,6 +46,88 @@ const PdfTools = {
   },
 
   /**
+   * Helper: canvas.toBlob that never returns null (null = canvas over the browser's size limit)
+   */
+  canvasToBlob: async (canvas, type = 'image/png', quality) => {
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, type, quality));
+    if (blob) return blob;
+    const png = type !== 'image/png' ? await new Promise(resolve => canvas.toBlob(resolve, 'image/png')) : null;
+    if (png) return png;
+    throw new Error(`หน้าเอกสาร/ภาพมีขนาดใหญ่เกินกว่าที่เบราว์เซอร์รองรับ (${canvas.width}×${canvas.height} px) กรุณาลดความละเอียดลง`);
+  },
+
+  /**
+   * Helper: Render scale capped so the canvas stays under ~16.7M px (iOS Safari limit)
+   */
+  safeScale: (viewport, scale) => {
+    const maxPixels = 16777216;
+    const px = viewport.width * viewport.height * scale * scale;
+    return px > maxPixels ? scale * Math.sqrt(maxPixels / px) : scale;
+  },
+
+  /**
+   * Helper: Map "as displayed" coordinates (honours the page's /Rotate and MediaBox offset)
+   * to raw PDF coordinates so stamps land where the user sees them.
+   */
+  visualFrame: (page) => {
+    const { x: ox, y: oy, width: W, height: H } = page.getMediaBox();
+    const rot = ((page.getRotation().angle % 360) + 360) % 360;
+    const swap = rot === 90 || rot === 270;
+    const map = (u, v) => {
+      if (rot === 90) return { x: ox + W - v, y: oy + u };
+      if (rot === 180) return { x: ox + W - u, y: oy + H - v };
+      if (rot === 270) return { x: ox + v, y: oy + H - u };
+      return { x: ox + u, y: oy + v };
+    };
+    return { width: swap ? H : W, height: swap ? W : H, rot, map };
+  },
+
+  /**
+   * Helper: Draw an image at a visual rect (u, v = bottom-left as displayed) with optional extra rotation
+   */
+  drawVisualImage: (page, image, { u, v, width, height, angle = 0 }) => {
+    const frame = PdfTools.visualFrame(page);
+    const pt = frame.map(u, v);
+    page.drawImage(image, {
+      x: pt.x,
+      y: pt.y,
+      width,
+      height,
+      rotate: window.PDFLib.degrees(frame.rot + angle)
+    });
+  },
+
+  /**
+   * Helper: Read EXIF orientation (1-8) from JPEG bytes, 1 when absent
+   */
+  jpegOrientation: (buffer) => {
+    const view = new DataView(buffer);
+    if (view.byteLength < 4 || view.getUint16(0) !== 0xFFD8) return 1;
+    let offset = 2;
+    while (offset + 4 <= view.byteLength) {
+      const marker = view.getUint16(offset);
+      const size = view.getUint16(offset + 2);
+      if (marker === 0xFFE1 && offset + 10 <= view.byteLength && view.getUint32(offset + 4) === 0x45786966) {
+        const tiff = offset + 10;
+        if (tiff + 8 > view.byteLength) return 1;
+        const little = view.getUint16(tiff) === 0x4949;
+        const ifd = tiff + view.getUint32(tiff + 4, little);
+        if (ifd + 2 > view.byteLength) return 1;
+        const count = view.getUint16(ifd, little);
+        for (let i = 0; i < count; i++) {
+          const entry = ifd + 2 + i * 12;
+          if (entry + 10 > view.byteLength) return 1;
+          if (view.getUint16(entry, little) === 0x0112) return view.getUint16(entry + 8, little);
+        }
+        return 1;
+      }
+      if ((marker & 0xFF00) !== 0xFF00 || marker === 0xFFDA) return 1;
+      offset += 2 + size;
+    }
+    return 1;
+  },
+
+  /**
    * Helper: Format file size to human readable string
    */
   formatSize: (bytes) => {
@@ -173,7 +255,7 @@ const PdfTools = {
       if (!window.PDFLib) throw new Error('ไม่พบไลบรารี pdf-lib');
 
       if (onProgress) onProgress(10, 'กำลังโหลดและวิเคราะห์โครงสร้างหน้าเอกสาร PDF...');
-      const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+      const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false });
       const pdf = await loadingTask.promise;
       const totalPages = pdf.numPages;
 
@@ -197,7 +279,7 @@ const PdfTools = {
 
         const page = await pdf.getPage(i);
         const origViewport = page.getViewport({ scale: 1.0 });
-        const scaledViewport = page.getViewport({ scale: renderScale });
+        const scaledViewport = page.getViewport({ scale: PdfTools.safeScale(origViewport, renderScale) });
 
         const canvas = document.createElement('canvas');
         canvas.width = Math.round(scaledViewport.width);
@@ -213,12 +295,13 @@ const PdfTools = {
           viewport: scaledViewport
         }).promise;
 
-        const imgBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', jpegQuality));
+        const imgBlob = await PdfTools.canvasToBlob(canvas, 'image/jpeg', jpegQuality);
         const imgBytes = await imgBlob.arrayBuffer();
         canvas.width = 0;
         canvas.height = 0;
+        page.cleanup();
 
-        const embeddedImg = await newDoc.embedJpg(imgBytes);
+        const embeddedImg = imgBlob.type === 'image/png' ? await newDoc.embedPng(imgBytes) : await newDoc.embedJpg(imgBytes);
 
         // Keep original physical PDF page dimensions (e.g. A4 595.28 x 841.89 pt)
         const newPage = newDoc.addPage([origViewport.width, origViewport.height]);
@@ -230,6 +313,7 @@ const PdfTools = {
         });
       }
 
+      await pdf.destroy();
       if (onProgress) onProgress(93, 'กำลังประกอบและจัดทำไฟล์ PDF บีบอัด...');
       newDoc.setProducer('PenguTools (Cute Online File Toolkit)');
       newDoc.setCreator('PenguTools');
@@ -379,38 +463,27 @@ const PdfTools = {
       const arrayBuffer = await file.arrayBuffer();
       let embeddedImage;
 
-      // Handle PNG vs JPEG or convert WebP/GIF/others via Canvas
-      const fileType = file.type.toLowerCase();
-      if (fileType === 'image/jpeg' || fileType === 'image/jpg' || file.name.match(/\.jpe?g$/i)) {
+      // Detect by magic bytes (file.type / extension can lie)
+      const head = new Uint8Array(arrayBuffer, 0, Math.min(4, arrayBuffer.byteLength));
+      const isJpeg = head[0] === 0xFF && head[1] === 0xD8;
+      const isPng = head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4E && head[3] === 0x47;
+
+      if (isJpeg && PdfTools.jpegOrientation(arrayBuffer) <= 1) {
         embeddedImage = await pdfDoc.embedJpg(arrayBuffer);
-      } else if (fileType === 'image/png' || file.name.match(/\.png$/i)) {
+      } else if (isPng) {
         embeddedImage = await pdfDoc.embedPng(arrayBuffer);
       } else {
-        // Fallback for WebP / BMP / SVG: convert to PNG using Canvas
-        const pngBytes = await new Promise((resolve, reject) => {
-          const img = new Image();
-          const objUrl = URL.createObjectURL(file);
-          img.onload = async () => {
-            URL.revokeObjectURL(objUrl);
-            const canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth || img.width;
-            canvas.height = img.naturalHeight || img.height;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
-            canvas.width = 0;
-            canvas.height = 0;
-            const bytes = await blob.arrayBuffer();
-            resolve(bytes);
-          };
-          img.onerror = () => {
-            URL.revokeObjectURL(objUrl);
-            reject(new Error(`ไม่สามารถอ่านภาพ ${file.name} ได้`));
-          };
-          img.src = objUrl;
-        });
-
-        embeddedImage = await pdfDoc.embedPng(pngBytes);
+        // Rotated phone JPEGs (EXIF) and WebP/BMP/GIF: redraw via canvas, browsers apply EXIF orientation on draw
+        const img = await window.ImageTools.loadImage(file);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        const blob = await PdfTools.canvasToBlob(canvas, isJpeg ? 'image/jpeg' : 'image/png', 0.92);
+        canvas.width = 0;
+        canvas.height = 0;
+        const bytes = await blob.arrayBuffer();
+        embeddedImage = blob.type === 'image/jpeg' ? await pdfDoc.embedJpg(bytes) : await pdfDoc.embedPng(bytes);
       }
 
       const imgWidth = embeddedImage.width;
@@ -472,7 +545,7 @@ const PdfTools = {
     } = options;
 
     const arrayBuffer = await file.arrayBuffer();
-    const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+    const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false });
     const pdf = await loadingTask.promise;
     const totalPages = pdf.numPages;
 
@@ -489,14 +562,13 @@ const PdfTools = {
     }
 
     const imageResults = [];
-    const ext = format === 'image/jpeg' ? 'jpg' : 'png';
-
+    
     for (let idx = 0; idx < targetPages.length; idx++) {
       const pageNum = targetPages[idx];
       if (onProgress) onProgress(Math.round(((idx) / targetPages.length) * 90), `กำลังเรนเดอร์หน้าที่ ${pageNum}/${totalPages}...`);
 
       const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale });
+      const viewport = page.getViewport({ scale: PdfTools.safeScale(page.getViewport({ scale: 1 }), scale) });
 
       const canvas = document.createElement('canvas');
       canvas.width = Math.round(viewport.width);
@@ -512,18 +584,17 @@ const PdfTools = {
         viewport: viewport
       }).promise;
 
-      let blob = await new Promise(resolve => canvas.toBlob(resolve, format, 0.92));
-      if (!blob) {
-        blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-      }
+      const blob = await PdfTools.canvasToBlob(canvas, format, 0.92);
       canvas.width = 0;
       canvas.height = 0;
+      page.cleanup();
       imageResults.push({
         pageNum,
         blob,
-        filename: `${file.name.replace(/\.pdf$/i, '')}_page_${pageNum}.${ext}`
+        filename: `${file.name.replace(/\.pdf$/i, '')}_page_${pageNum}.${blob.type === 'image/jpeg' ? 'jpg' : 'png'}`
       });
     }
+    await pdf.destroy();
 
     if (targetPages.length === 1) {
       // Single page direct image download
@@ -559,18 +630,31 @@ const PdfTools = {
     if (onProgress) onProgress(20, 'กำลังตรวจสอบรหัสผ่านและถอดรหัสเอกสาร...');
     const arrayBuffer = await file.arrayBuffer();
 
+    // Probe first so a non-encrypted file gets a clear message instead of a silent re-save
+    const probe = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+    if (!probe.isEncrypted) {
+      throw new Error('ไฟล์นี้ไม่ได้ถูกล็อกด้วยรหัสผ่าน สามารถเปิดใช้งานได้ตามปกติอยู่แล้วครับ');
+    }
+
     let doc;
     try {
-      doc = await PDFDocument.load(arrayBuffer, {
-        password: password || '',
-        ignoreEncryption: false
-      });
+      doc = await PDFDocument.load(arrayBuffer, { password: password || '' });
     } catch (err) {
-      const msg = err.message || '';
-      if (msg.includes('Password') || msg.includes('password') || msg.includes('encrypted') || msg.includes('decrypt')) {
+      const msg = (err.message || '').toLowerCase();
+      if (msg.includes('password') || msg.includes('encrypt') || msg.includes('decrypt')) {
         throw new Error('รหัสผ่านไม่ถูกต้อง หรือเอกสารใช้รูปแบบการเข้ารหัสที่ไม่รองรับ กรุณาตรวจสอบรหัสผ่านอีกครั้ง');
       }
       throw err;
+    }
+
+    // The fork keeps the old /Encrypt dictionary object around; drop it so the saved file is truly unlocked
+    const { PDFName, PDFDict } = window.PDFLib;
+    for (const [ref, obj] of doc.context.enumerateIndirectObjects()) {
+      const dict = obj instanceof PDFDict ? obj : (obj && obj.dict instanceof PDFDict ? obj.dict : null);
+      const filter = dict && dict.get(PDFName.of('Filter'));
+      if (dict && (dict.has(PDFName.of('Encrypt')) || (filter && filter.toString() === '/Standard'))) {
+        doc.context.delete(ref);
+      }
     }
 
     if (onProgress) onProgress(75, 'กำลังบันทึกเอกสารฉบับปลดล็อกรหัสผ่าน...');
@@ -588,7 +672,7 @@ const PdfTools = {
     if (!window.pdfjsLib) throw new Error('ไม่พบไลบรารี PDF.js');
 
     const arrayBuffer = await file.arrayBuffer();
-    const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer });
+    const loadingTask = window.pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false });
     const pdf = await loadingTask.promise;
     const totalPages = pdf.numPages;
 
@@ -622,10 +706,12 @@ const PdfTools = {
         rotation: 0
       };
 
+      page.cleanup();
       pages.push(pageInfo);
       if (onPageRendered) onPageRendered(pageInfo, pageNum, totalPages);
     }
 
+    await pdf.destroy();
     return pages;
   },
 
@@ -710,7 +796,7 @@ const PdfTools = {
       ctx2.textAlign = 'center';
       ctx2.fillText(text, canvas.width / 2, canvas.height / 2);
 
-      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      const blob = await PdfTools.canvasToBlob(canvas, 'image/png');
       canvas.width = 0;
       canvas.height = 0;
       const buffer = await blob.arrayBuffer();
@@ -730,26 +816,22 @@ const PdfTools = {
     for (let i = 0; i < totalPages; i++) {
       if (onProgress) onProgress(Math.round(20 + ((i / totalPages) * 70)), `กำลังประมวลผลหน้าที่ ${i + 1}/${totalPages}...`);
       const page = pages[i];
-      const { width, height } = page.getSize();
+      const { width, height } = PdfTools.visualFrame(page);
 
       if (watermarkStamp) {
-        const wmWidth = watermarkStamp.width;
-        const wmHeight = watermarkStamp.height;
+        // Shrink long watermark text so it never runs off the page diagonal
+        const fit = Math.min(1, (Math.hypot(width, height) * 0.75) / watermarkStamp.width);
+        const wmWidth = watermarkStamp.width * fit;
+        const wmHeight = watermarkStamp.height * fit;
         const rad = (watermarkAngle * Math.PI) / 180;
         const cos = Math.cos(rad);
         const sin = Math.sin(rad);
 
-        // Correctly offset rotation origin around watermark center to center it on page
+        // Offset the rotation origin so the stamp's centre sits on the page centre
         const posX = (width / 2) - (wmWidth / 2) * cos + (wmHeight / 2) * sin;
         const posY = (height / 2) - (wmWidth / 2) * sin - (wmHeight / 2) * cos;
 
-        page.drawImage(watermarkStamp.image, {
-          x: posX,
-          y: posY,
-          width: wmWidth,
-          height: wmHeight,
-          rotate: window.PDFLib.degrees(watermarkAngle)
-        });
+        PdfTools.drawVisualImage(page, watermarkStamp.image, { u: posX, v: posY, width: wmWidth, height: wmHeight, angle: watermarkAngle });
       }
 
       if (addPageNumber) {
@@ -765,20 +847,108 @@ const PdfTools = {
         if (pageNumberPos === 'bottom-left') posX = 36;
         else if (pageNumberPos === 'bottom-right') posX = width - stampW - 36;
 
-        const posY = 20;
-
-        page.drawImage(numStamp.image, {
-          x: posX,
-          y: posY,
-          width: stampW,
-          height: stampH
-        });
+        PdfTools.drawVisualImage(page, numStamp.image, { u: posX, v: 20, width: stampW, height: stampH });
       }
     }
 
     if (onProgress) onProgress(95, 'กำลังจัดทำไฟล์ PDF สมบูรณ์...');
     const pdfBytes = await doc.save();
     return new Blob([pdfBytes], { type: 'application/pdf' });
+  },
+
+  /**
+   * 12. Protect PDF with a password (AES via @cantoo/pdf-lib encrypt)
+   */
+  protectPdf: async (file, options = {}, onProgress) => {
+    if (!window.PDFLib) throw new Error('ไม่พบไลบรารี pdf-lib');
+    const { userPassword = '', ownerPassword = '', allowPrinting = true, allowCopying = false, allowModifying = false } = options;
+    if (!userPassword) throw new Error('กรุณาตั้งรหัสผ่านสำหรับเปิดเอกสาร');
+
+    if (onProgress) onProgress(20, 'กำลังเปิดเอกสาร PDF...');
+    const doc = await window.PDFLib.PDFDocument.load(await file.arrayBuffer());
+    if (doc.isEncrypted) throw new Error('ไฟล์นี้ถูกล็อกรหัสผ่านอยู่แล้ว กรุณาปลดล็อกก่อนตั้งรหัสใหม่');
+
+    if (onProgress) onProgress(60, 'กำลังเข้ารหัสเอกสาร...');
+    doc.encrypt({
+      userPassword,
+      // Owner password unlocks the permission limits; default to a random one so the user password alone can't lift them
+      ownerPassword: ownerPassword || Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''),
+      permissions: {
+        printing: allowPrinting ? 'highResolution' : undefined,
+        copying: allowCopying,
+        modifying: allowModifying,
+        annotating: allowModifying,
+        fillingForms: true,
+        contentAccessibility: true,
+        documentAssembly: allowModifying
+      }
+    });
+    const pdfBytes = await doc.save();
+    if (onProgress) onProgress(100, 'ล็อกรหัสผ่านสำเร็จ!');
+    return new Blob([pdfBytes], { type: 'application/pdf' });
+  },
+
+  /**
+   * 13. Extract text from a PDF (text layer only; scanned pages have none)
+   */
+  extractText: async (file, pageRange = '', onProgress) => {
+    PdfTools.initPdfWorker();
+    if (!window.pdfjsLib) throw new Error('ไม่พบไลบรารี PDF.js');
+    const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer(), isEvalSupported: false }).promise;
+    const total = pdf.numPages;
+    const targets = pageRange.trim()
+      ? PdfTools.parsePageRange(pageRange, total).map(i => i + 1)
+      : Array.from({ length: total }, (_, i) => i + 1);
+    if (targets.length === 0) throw new Error(`ช่วงหน้าที่ระบุไม่ถูกต้อง (มีทั้งหมด ${total} หน้า)`);
+
+    const parts = [];
+    let charCount = 0;
+    for (let idx = 0; idx < targets.length; idx++) {
+      const n = targets[idx];
+      if (onProgress) onProgress(Math.round((idx / targets.length) * 95), `กำลังอ่านข้อความหน้า ${n}/${total}...`);
+      const page = await pdf.getPage(n);
+      const content = await page.getTextContent();
+      const text = content.items.map(it => (it.str || '') + (it.hasEOL ? '\n' : '')).join('').replace(/[ \t]+\n/g, '\n').trim();
+      charCount += text.length;
+      parts.push(`===== หน้า ${n} =====\n${text}`);
+      page.cleanup();
+    }
+    await pdf.destroy();
+    if (onProgress) onProgress(100, 'ดึงข้อความสำเร็จ!');
+    const fullText = parts.join('\n\n');
+    return {
+      text: fullText,
+      charCount,
+      pageCount: targets.length,
+      blob: new Blob(['﻿' + fullText], { type: 'text/plain;charset=utf-8' })
+    };
+  },
+
+  /**
+   * Render one page to a data URL (used by the Sign PDF click-to-place preview)
+   */
+  renderPagePreview: async (file, pageNumber, targetWidth = 360) => {
+    PdfTools.initPdfWorker();
+    const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer(), isEvalSupported: false }).promise;
+    try {
+      const page = await pdf.getPage(Math.min(Math.max(1, pageNumber), pdf.numPages));
+      const base = page.getViewport({ scale: 1 });
+      const viewport = page.getViewport({ scale: targetWidth / base.width });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(viewport.width);
+      canvas.height = Math.round(viewport.height);
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const url = canvas.toDataURL('image/jpeg', 0.85);
+      const aspect = canvas.width / canvas.height;
+      canvas.width = 0;
+      canvas.height = 0;
+      return { url, aspect, numPages: pdf.numPages };
+    } finally {
+      await pdf.destroy();
+    }
   },
 
   /**
@@ -856,7 +1026,7 @@ const PdfTools = {
     let targetPages = [];
     if (options.targetPage === 'all') {
       targetPages = pages;
-    } else if (options.targetPage === 'last' || options.targetPage === 'all-last') {
+    } else if (options.targetPage === 'last') {
       targetPages = [pages[totalPages - 1]];
     } else {
       const p = parseInt(options.targetPage, 10);
@@ -869,34 +1039,25 @@ const PdfTools = {
     const posYPercent = Math.min(100, Math.max(0, options.posYPercent !== undefined ? options.posYPercent : 85)) / 100;
 
     for (const page of targetPages) {
-      const { width, height } = page.getSize();
-      
+      // Visual size = as displayed, so rotated (/Rotate) pages get the signature where the user expects
+      const { width, height } = PdfTools.visualFrame(page);
+
       const sigWidth = width * sizePercent;
       const sigHeight = sigWidth / sigAspect;
 
-      // Note: PDF coordinates origin (0, 0) is at bottom-left
-      // posYPercent is 0 at top, 100 at bottom
+      // posYPercent is 0 at top, 100 at bottom; PDF origin is bottom-left
       const sigX = Math.max(0, Math.min(width - sigWidth, (width - sigWidth) * posXPercent));
       const sigY = Math.max(0, Math.min(height - sigHeight, height - sigHeight - (height - sigHeight) * posYPercent));
 
-      page.drawImage(sigImage, {
-        x: sigX,
-        y: sigY,
-        width: sigWidth,
-        height: sigHeight
-      });
+      PdfTools.drawVisualImage(page, sigImage, { u: sigX, v: sigY, width: sigWidth, height: sigHeight });
 
       if (dateImage) {
         const dateWidth = sigWidth * 0.9;
         const dateHeight = dateWidth / dateAspect;
-        const dateX = sigX;
-        const dateY = Math.max(5, sigY - dateHeight - 4);
-        page.drawImage(dateImage, {
-          x: dateX,
-          y: dateY,
-          width: dateWidth,
-          height: dateHeight
-        });
+        // Below the signature, or above it when there is no room at the bottom edge
+        const below = sigY - dateHeight - 4;
+        const dateY = below >= 5 ? below : Math.min(height - dateHeight, sigY + sigHeight + 4);
+        PdfTools.drawVisualImage(page, dateImage, { u: sigX, v: dateY, width: dateWidth, height: dateHeight });
       }
     }
 

@@ -404,6 +404,96 @@
       }
     },
     {
+      id: 'protect-pdf',
+      name: 'Protect PDF',
+      title: 'ล็อกรหัสผ่าน PDF',
+      category: 'pdf',
+      icon: '🔒',
+      desc: 'ตั้งรหัสผ่านเปิดเอกสาร PDF และจำกัดสิทธิ์การพิมพ์ คัดลอก หรือแก้ไข เข้ารหัสในเครื่องของคุณ',
+      badge: 'Security',
+      accept: '.pdf,application/pdf',
+      multiple: false,
+      btnText: 'ล็อกรหัสผ่านและบันทึก PDF',
+      renderSettings: () => `
+        <div class="settings-grid">
+          <div class="form-group">
+            <label class="form-label">รหัสผ่านเปิดเอกสาร</label>
+            <input type="password" id="protectUserPw" class="form-control" placeholder="รหัสผ่านที่ใช้เปิดไฟล์" autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">ยืนยันรหัสผ่าน</label>
+            <input type="password" id="protectUserPw2" class="form-control" placeholder="พิมพ์รหัสผ่านอีกครั้ง" autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">รหัสผ่านเจ้าของ (ไม่บังคับ - ใช้ปลดล็อกสิทธิ์)</label>
+            <input type="password" id="protectOwnerPw" class="form-control" placeholder="เว้นว่าง = สุ่มให้อัตโนมัติ" autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">สิทธิ์ที่อนุญาต</label>
+            <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="protectAllowPrint" checked> อนุญาตให้สั่งพิมพ์</label>
+            <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="protectAllowCopy"> อนุญาตให้คัดลอกข้อความ</label>
+            <label style="display:flex; gap:8px; align-items:center;"><input type="checkbox" id="protectAllowModify"> อนุญาตให้แก้ไขเอกสาร</label>
+          </div>
+        </div>
+        ${window.PenguMascot.withTip('จำรหัสผ่านไว้ให้ดีนะ! ระบบไม่เก็บรหัสผ่านไว้ที่ไหนเลย ถ้าลืมจะเปิดไฟล์ไม่ได้อีกกวิน!', 'droppable', 80)}
+      `,
+      execute: async (files, settings, onProgress) => {
+        const userPassword = document.getElementById('protectUserPw')?.value || '';
+        const confirmPw = document.getElementById('protectUserPw2')?.value || '';
+        if (!userPassword) throw new Error('กรุณาตั้งรหัสผ่านสำหรับเปิดเอกสาร');
+        if (userPassword !== confirmPw) throw new Error('รหัสผ่านทั้งสองช่องไม่ตรงกัน');
+        const blob = await window.PdfTools.protectPdf(files[0], {
+          userPassword,
+          ownerPassword: document.getElementById('protectOwnerPw')?.value || '',
+          allowPrinting: document.getElementById('protectAllowPrint')?.checked ?? true,
+          allowCopying: document.getElementById('protectAllowCopy')?.checked ?? false,
+          allowModifying: document.getElementById('protectAllowModify')?.checked ?? false
+        }, onProgress);
+        return {
+          blob,
+          filename: `${files[0].name.replace(/\.pdf$/i, '')}_protected.pdf`,
+          successMsg: 'ล็อกรหัสผ่านเอกสาร PDF สำเร็จ! ต้องใส่รหัสผ่านทุกครั้งที่เปิดไฟล์'
+        };
+      }
+    },
+    {
+      id: 'pdf-to-text',
+      name: 'PDF to Text',
+      title: 'ดึงข้อความจาก PDF',
+      category: 'pdf',
+      icon: '📝',
+      desc: 'ดึงข้อความทั้งหมดในเอกสาร PDF ออกมาเป็นไฟล์ .txt รองรับภาษาไทย พร้อมคัดลอกได้ทันที',
+      badge: 'New',
+      accept: '.pdf,application/pdf',
+      multiple: false,
+      btnText: 'ดึงข้อความ',
+      renderSettings: () => `
+        <div class="form-group">
+          <label class="form-label">หน้าที่ต้องการ (เว้นว่าง = ทุกหน้า)</label>
+          <input type="text" id="textRange" class="form-control" placeholder="เช่น 1-3, 5">
+        </div>
+        ${window.PenguMascot.withTip('ใช้ได้กับ PDF ที่มีข้อความจริง ถ้าเป็นไฟล์สแกนเป็นรูปภาพจะไม่มีข้อความให้ดึงนะกวิน!', 'waving', 80)}
+      `,
+      execute: async (files, settings, onProgress) => {
+        const range = document.getElementById('textRange')?.value || '';
+        const res = await window.PdfTools.extractText(files[0], range, onProgress);
+        const preview = res.text.length > 20000 ? res.text.slice(0, 20000) + '\n…' : res.text;
+        return {
+          blob: res.blob,
+          filename: `${files[0].name.replace(/\.pdf$/i, '')}.txt`,
+          customResultHtml: res.charCount === 0 ? `
+            <div class="alert-box alert-warning" style="margin-top: 1rem;">
+              <span>⚠️ ไม่พบข้อความในเอกสารนี้ อาจเป็นไฟล์สแกนที่เป็นรูปภาพ (ต้องใช้ OCR)</span>
+            </div>
+          ` : `
+            <textarea id="extractedTextPreview" class="form-control" readonly style="width: 100%; min-height: 260px; margin-top: 1rem; font-family: inherit; text-align: left;">${escapeHtml(preview)}</textarea>
+            <button type="button" class="btn-secondary" style="margin-top: 0.5rem;" onclick="navigator.clipboard && navigator.clipboard.writeText(document.getElementById('extractedTextPreview').value).then(() => { this.textContent = '✅ คัดลอกแล้ว'; })">📋 คัดลอกข้อความ</button>
+          `,
+          successMsg: `ดึงข้อความ ${res.pageCount} หน้า (${res.charCount.toLocaleString()} ตัวอักษร) สำเร็จ!`
+        };
+      }
+    },
+    {
       id: 'watermark-pdf',
       name: 'PDF Watermark & Numbering',
       title: 'ใส่เลขหน้าและลายน้ำ PDF',
@@ -569,7 +659,7 @@
           <div class="settings-grid" style="margin-top: 1.5rem;">
             <div class="form-group">
               <label class="form-label">วางลายเซ็นที่หน้า</label>
-              <select id="signTargetPage" class="form-control">
+              <select id="signTargetPage" class="form-control" onchange="PenguApp.refreshSignPagePreview()">
                 <option value="last" selected>หน้าสุดท้าย (มาตรฐานสัญญา/เอกสาร)</option>
                 <option value="1">หน้าแรก (หน้า 1)</option>
                 <option value="all">ทุกหน้าในเอกสาร</option>
@@ -626,7 +716,7 @@
               <label class="form-label" style="margin: 0; font-weight: 700; color: var(--slate-800);">
                 👁️ ตัวอย่างตำแหน่งจริงบนหน้ากระดาษ (Live Placement Preview)
               </label>
-              <span style="font-size: 0.78rem; color: var(--slate-500); background: var(--slate-200); padding: 2px 8px; border-radius: 10px;">ขยับตามแถบเลื่อน</span>
+              <span style="font-size: 0.78rem; color: var(--slate-500); background: var(--slate-200); padding: 2px 8px; border-radius: 10px;">คลิกบนหน้าเพื่อวางลายเซ็น</span>
             </div>
             <div class="sign-page-mockup-wrapper">
               <div class="sign-page-mockup" id="signPageMockup">
@@ -866,7 +956,10 @@
       execute: async (files, settings, onProgress) => {
         const targetWidth = document.getElementById('resizeWidth')?.value;
         const targetHeight = document.getElementById('resizeHeight')?.value;
-        const res = await window.ImageTools.resizeImage(files[0], { targetWidth, targetHeight }, onProgress);
+        // Keep the source format (PNG output for a JPEG photo would balloon the file size)
+        const srcType = (files[0].type || '').toLowerCase();
+        const format = ['image/jpeg', 'image/webp'].includes(srcType) ? srcType : 'image/png';
+        const res = await window.ImageTools.resizeImage(files[0], { targetWidth, targetHeight, format }, onProgress);
         return {
           blob: res.blob,
           filename: res.filename,
@@ -1209,7 +1302,8 @@
     imageNaturalDims: { width: 1280, height: 720 },
     organizerPages: [],
     organizerOriginalPages: [],
-    pendingChainedFile: null,
+    pendingFiles: null,
+    sharedFiles: [],
     lastResultFilename: null
   };
 
@@ -1235,6 +1329,9 @@
         const area = document.getElementById('toolsDisplayArea');
         if (area) area.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 50);
+    } else if (rawHash === 'shared') {
+      renderSharedPage();
+      updateNavActiveState('home');
     } else {
       const tool = TOOLS.find(t => t.id === rawHash);
       if (tool) {
@@ -1314,6 +1411,57 @@
   }
 
   /**
+   * Shared Files Page (PWA Share Target): pick a tool for files shared from another app
+   */
+  async function renderSharedPage() {
+    state.currentTool = null;
+    const mainApp = document.getElementById('app');
+    if (!mainApp) return;
+
+    let files = [];
+    try {
+      const cache = await caches.open('pengutools-share');
+      const keys = await cache.keys();
+      for (const req of keys) {
+        const res = await cache.match(req);
+        const blob = await res.blob();
+        const name = decodeURIComponent(res.headers.get('X-Filename') || 'shared_file');
+        files.push(new File([blob], name, { type: blob.type }));
+      }
+    } catch (e) {
+      console.warn('Could not read shared files:', e);
+    }
+    state.sharedFiles = files;
+
+    const tools = files.length ? TOOLS.filter(t => files.every(f => matchesAccept(f, t.accept))) : [];
+    mainApp.innerHTML = `
+      <div class="container" style="padding: 2rem 1rem; max-width: 760px;">
+        <h1 style="font-size: 1.5rem; margin-bottom: 0.5rem;">📥 ไฟล์ที่แชร์เข้ามา</h1>
+        ${files.length ? `
+          <p style="color: var(--slate-500);">${files.map(f => escapeHtml(f.name)).join(', ')}</p>
+          <h3 style="margin: 1.5rem 0 0.75rem;">เลือกเครื่องมือที่ต้องการใช้</h3>
+          <div class="chain-pills">
+            ${tools.map(t => `
+              <button type="button" class="chain-pill-btn" onclick="PenguApp.useSharedFiles('${t.id}')">
+                <span>${t.icon}</span><span>${t.title}</span>
+              </button>
+            `).join('') || '<p>ไม่มีเครื่องมือที่รองรับไฟล์ชนิดนี้</p>'}
+          </div>
+        ` : '<p>ไม่พบไฟล์ที่แชร์เข้ามา ลองแชร์ไฟล์จากแอปอื่นมาที่ PenguTools อีกครั้งครับ</p>'}
+        <p style="margin-top: 2rem;"><a href="#/">← กลับหน้าแรก</a></p>
+      </div>
+    `;
+  }
+
+  function useSharedFiles(toolId) {
+    if (!state.sharedFiles.length) return;
+    state.pendingFiles = state.sharedFiles;
+    state.sharedFiles = [];
+    caches.delete('pengutools-share').catch(() => {});
+    window.location.hash = '#/' + toolId;
+  }
+
+  /**
    * Render Home Page
    */
   function renderHomePage() {
@@ -1357,7 +1505,7 @@
                 <circle cx="11" cy="11" r="8"></circle>
                 <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
               </svg>
-              <input type="text" id="toolSearch" class="search-input" placeholder="ค้นหาเครื่องมือ เช่น รวม PDF, บีบอัดภาพ, แปลงรูป..." value="${state.searchQuery}">
+              <input type="text" id="toolSearch" class="search-input" placeholder="ค้นหาเครื่องมือ เช่น รวม PDF, บีบอัดภาพ, แปลงรูป..." value="${escapeHtml(state.searchQuery)}">
               <button id="searchClear" class="search-clear-btn" aria-label="ล้างการค้นหา">✕</button>
             </div>
           </div>
@@ -1654,14 +1802,28 @@
       }
     });
 
-    // Auto-load chained file if coming from workflow chaining
-    if (state.pendingChainedFile) {
-      const chained = state.pendingChainedFile;
-      state.pendingChainedFile = null;
+    // Auto-load files handed over by workflow chaining or the PWA share target
+    if (state.pendingFiles) {
+      const pending = state.pendingFiles;
+      state.pendingFiles = null;
       setTimeout(() => {
-        handleFilesAdded([chained], tool);
+        handleFilesAdded(pending, tool);
       }, 60);
     }
+  }
+
+  /**
+   * Check a file against an <input accept> string, e.g. ".pdf,application/pdf" or "image/*"
+   */
+  function matchesAccept(file, accept) {
+    if (!accept || accept === '*/*') return true;
+    const name = file.name.toLowerCase();
+    const type = (file.type || '').toLowerCase();
+    return accept.split(',').map(a => a.trim().toLowerCase()).some(a => {
+      if (a.startsWith('.')) return name.endsWith(a);
+      if (a.endsWith('/*')) return type.startsWith(a.slice(0, -1));
+      return type === a;
+    });
   }
 
   /**
@@ -1670,14 +1832,22 @@
   function handleFilesAdded(incomingFiles, tool = state.currentTool) {
     if (!incomingFiles || incomingFiles.length === 0) return;
 
-    // Filter by accepted types and non-empty files
+    // Filter by accepted types (drag & drop bypasses the input's accept attribute) and non-empty files
+    const rejected = [];
     const validFiles = incomingFiles.filter(file => {
       if (file.size === 0) {
-        alert(`ไฟล์ "${escapeHtml(file.name)}" เป็นไฟล์ว่างเปล่า (0 Bytes)`);
+        alert(`ไฟล์ "${file.name}" เป็นไฟล์ว่างเปล่า (0 Bytes)`);
+        return false;
+      }
+      if (!matchesAccept(file, tool.accept)) {
+        rejected.push(file.name);
         return false;
       }
       return true;
     });
+    if (rejected.length) {
+      alert(`ไฟล์ต่อไปนี้ไม่ใช่ชนิดที่เครื่องมือนี้รองรับ (${tool.accept}): ${rejected.join(', ')}`);
+    }
 
     if (validFiles.length === 0) return;
 
@@ -1917,7 +2087,7 @@
 
             <div class="result-actions" style="margin-top: 1.5rem;">
               ${!result.noDownload ? `
-                <a href="${state.currentResultUrl}" download="${result.filename || 'pengutools_result'}" class="btn-download" id="btnDownload">
+                <a href="${state.currentResultUrl}" download="${escapeHtml(result.filename || 'pengutools_result')}" class="btn-download" id="btnDownload">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                     <polyline points="7 10 12 15 17 10"></polyline>
@@ -2250,6 +2420,8 @@
         { id: 'organize-pdf', icon: '📑', label: 'จัดเรียง/หมุนหน้า' },
         { id: 'watermark-pdf', icon: '💧', label: 'ใส่ลายน้ำ' },
         { id: 'pdf-to-images', icon: '🖼️', label: 'แปลงเป็นภาพ' },
+        { id: 'protect-pdf', icon: '🔒', label: 'ล็อกรหัสผ่าน' },
+        { id: 'pdf-to-text', icon: '📝', label: 'ดึงข้อความ' },
         { id: 'split-pdf', icon: '✂️', label: 'แยกหน้า' }
       ];
     } else if (isImg) {
@@ -2296,7 +2468,7 @@
       lastModified: Date.now()
     });
 
-    state.pendingChainedFile = chainedFile;
+    state.pendingFiles = [chainedFile];
     window.location.hash = '#/' + targetToolId;
   }
 
@@ -2335,6 +2507,29 @@
     sigState.canvas = canvas;
     sigState.ctx = ctx;
     sigState.hasDrawn = false;
+    sigState.drawAspect = width / height;
+
+    // Click-to-place: centre the signature where the user clicks on the page preview
+    const mockup = document.getElementById('signPageMockup');
+    if (mockup) {
+      mockup.onclick = (e) => {
+        const b = mockup.getBoundingClientRect();
+        const size = parseInt(document.getElementById('signSizeSlider')?.value || '26', 10);
+        const heightPct = getSignHeightPercent(size);
+        const cx = ((e.clientX - b.left) / b.width) * 100;
+        const cy = ((e.clientY - b.top) / b.height) * 100;
+        const clamp = (v) => Math.round(Math.min(100, Math.max(0, v)));
+        const posX = size >= 100 ? 0 : clamp(((cx - size / 2) / (100 - size)) * 100);
+        const posY = heightPct >= 100 ? 0 : clamp(((cy - heightPct / 2) / (100 - heightPct)) * 100);
+        const xs = document.getElementById('signPosXSlider');
+        const ys = document.getElementById('signPosYSlider');
+        if (xs) xs.value = posX;
+        if (ys) ys.value = posY;
+        const preset = document.getElementById('signPosPreset');
+        if (preset) preset.value = 'custom';
+        handleSignSliderChange();
+      };
+    }
 
     const getPos = (e) => {
       const b = canvas.getBoundingClientRect();
@@ -2367,12 +2562,15 @@
       sigState.isDrawing = false;
       updateSignLivePreview();
     };
-    window.addEventListener('mouseup', () => {
-      if (sigState.isDrawing) {
-        sigState.isDrawing = false;
-        updateSignLivePreview();
-      }
-    });
+    if (!sigState.windowListenerBound) {
+      sigState.windowListenerBound = true;
+      window.addEventListener('mouseup', () => {
+        if (sigState.isDrawing) {
+          sigState.isDrawing = false;
+          updateSignLivePreview();
+        }
+      });
+    }
 
     canvas.ontouchstart = (e) => {
       e.preventDefault();
@@ -2452,6 +2650,7 @@
         const ctx = c.getContext('2d');
         ctx.drawImage(img, 0, 0);
         sigState.uploadedDataUrl = c.toDataURL('image/png');
+        sigState.uploadAspect = c.width / c.height;
         c.width = 0;
         c.height = 0;
         const preview = document.getElementById('sigImagePreview');
@@ -2460,6 +2659,7 @@
         if (preview) preview.style.display = 'block';
         updateSignLivePreview();
       };
+      img.onerror = () => alert('ไม่สามารถอ่านไฟล์ภาพลายเซ็นได้ กรุณาใช้ไฟล์ PNG, JPG หรือ WebP');
       img.src = e.target.result;
     };
     reader.readAsDataURL(file);
@@ -2528,13 +2728,15 @@
     const posX = parseInt(document.getElementById('signPosXSlider')?.value || '70', 10);
     const posY = parseInt(document.getElementById('signPosYSlider')?.value || '85', 10);
 
+    // Same maths as PdfTools.signPdf, so the preview matches the saved PDF
+    const heightPct = getSignHeightPercent(size);
     const left = ((100 - size) * posX) / 100;
-    const approxHeightPercent = Math.min(35, size * 0.45);
-    const top = ((100 - approxHeightPercent) * posY) / 100;
+    const top = ((100 - heightPct) * posY) / 100;
 
     badge.style.left = `${left}%`;
     badge.style.top = `${top}%`;
     badge.style.width = `${size}%`;
+    badge.style.height = `${heightPct}%`;
 
     const addDate = document.getElementById('signAddDate')?.checked;
     const dateText = document.getElementById('signDateText')?.value || '';
@@ -2561,6 +2763,35 @@
     }
   }
 
+  // Signature height as % of the page height for a given width %
+  function getSignHeightPercent(size) {
+    const mockup = document.getElementById('signPageMockup');
+    const pageAspect = sigState.pageAspect || (mockup && mockup.clientHeight ? mockup.clientWidth / mockup.clientHeight : 0.75);
+    const sigAspect = (sigState.activeTab === 'upload' ? sigState.uploadAspect : sigState.drawAspect) || (540 / 190);
+    return Math.min(100, (size * pageAspect) / sigAspect);
+  }
+
+  // Render the chosen target page behind the placement preview
+  async function refreshSignPagePreview() {
+    const file = state.selectedFiles[0];
+    const mockup = document.getElementById('signPageMockup');
+    if (!file || !mockup || !window.pdfjsLib) return;
+    const target = document.getElementById('signTargetPage')?.value || 'last';
+    const token = (sigState.previewToken = (sigState.previewToken || 0) + 1);
+    try {
+      const pageNum = target === 'last' ? Infinity : (target === 'all' ? 1 : parseInt(target, 10) || 1);
+      const preview = await window.PdfTools.renderPagePreview(file, pageNum === Infinity ? 1e9 : pageNum);
+      if (token !== sigState.previewToken) return; // a newer request superseded this one
+      sigState.pageAspect = preview.aspect;
+      mockup.classList.add('has-page');
+      mockup.style.backgroundImage = `url(${preview.url})`;
+      mockup.style.aspectRatio = String(preview.aspect);
+      updateSignLivePreview();
+    } catch (e) {
+      console.warn('Could not render sign page preview:', e);
+    }
+  }
+
   async function populateSignPages(file) {
     const targetSelect = document.getElementById('signTargetPage');
     if (!targetSelect || !file || !window.PDFLib) return;
@@ -2578,6 +2809,7 @@
         optionsHtml += `<option value="${i}">หน้า ${i}</option>`;
       }
       targetSelect.innerHTML = optionsHtml;
+      refreshSignPagePreview();
     } catch (e) {
       console.warn('Could not read page count for sign target:', e);
     }
@@ -2651,6 +2883,8 @@
     handleSignDateToggle,
     updateSignLivePreview,
     getSignatureDataUrl,
+    refreshSignPagePreview,
+    useSharedFiles,
     installPwa
   };
 

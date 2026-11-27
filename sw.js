@@ -3,7 +3,8 @@
  * Offline Caching & Progressive Web App Engine
  */
 
-const CACHE_NAME = 'pengutools-v1.3.1';
+const CACHE_NAME = 'pengutools-v1.4.0';
+const SHARE_CACHE = 'pengutools-share';
 
 const PRECACHE_ASSETS = [
   './',
@@ -40,7 +41,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((name) => {
-          if (name !== CACHE_NAME) {
+          if (name !== CACHE_NAME && name !== SHARE_CACHE) {
             return caches.delete(name);
           }
         })
@@ -51,10 +52,25 @@ self.addEventListener('activate', (event) => {
 
 // Fetch: Stale-While-Revalidate / Network-First with Cache Fallback
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+
+  // PWA Share Target: files shared from other apps arrive as a POST, stash them and open the picker
+  if (event.request.method === 'POST' && url.pathname.endsWith('/share-target')) {
+    event.respondWith((async () => {
+      const formData = await event.request.formData();
+      const files = formData.getAll('files').filter(f => f && typeof f === 'object' && f.size > 0);
+      await caches.delete(SHARE_CACHE);
+      const cache = await caches.open(SHARE_CACHE);
+      await Promise.all(files.map((file, i) => cache.put(`./shared/${i}`, new Response(file, {
+        headers: { 'Content-Type': file.type || 'application/octet-stream', 'X-Filename': encodeURIComponent(file.name) }
+      }))));
+      return Response.redirect('./index.html#/shared', 303);
+    })());
+    return;
+  }
+
   // Only handle GET requests
   if (event.request.method !== 'GET') return;
-
-  const url = new URL(event.request.url);
 
   // Ignore cross-origin non-http schemes
   if (!url.protocol.startsWith('http')) return;

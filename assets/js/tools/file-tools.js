@@ -193,7 +193,7 @@ const FileTools = {
     }
 
     // Check for PDF page count
-    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
+    if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
       if (window.PDFLib) {
         try {
           const ab = await file.arrayBuffer();

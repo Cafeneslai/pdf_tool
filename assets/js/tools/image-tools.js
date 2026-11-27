@@ -24,6 +24,11 @@ const ImageTools = {
   },
 
   /**
+   * Helper: File extension for the MIME type the browser actually produced
+   */
+  extFromMime: (mime) => ({ 'image/jpeg': 'jpg', 'image/webp': 'webp' })[mime] || 'png',
+
+  /**
    * 1. Compress Image
    * Real image decompression, downscaling, and re-encoding with exact byte comparisons
    */
@@ -101,8 +106,8 @@ const ImageTools = {
     if (onProgress) onProgress(75, 'กำลังเข้ารหัสและบีบอัดสตรีมภาพ...');
     let blob = await new Promise(resolve => canvas.toBlob(resolve, targetMime, quality));
 
-    // Fallback if browser doesn't support the requested MIME type
-    if (!blob) {
+    // Unsupported encoders (e.g. WebP on Safari) silently return PNG, so check the real type
+    if (!blob || blob.type !== targetMime) {
       targetMime = 'image/jpeg';
       ctx.fillStyle = '#FFFFFF';
       ctx.fillRect(0, 0, width, height);
@@ -112,6 +117,7 @@ const ImageTools = {
 
     canvas.width = 0;
     canvas.height = 0;
+    if (!blob) throw new Error(`ภาพ "${file.name}" มีขนาดใหญ่เกินกว่าที่เบราว์เซอร์รองรับ`);
 
     const originalSize = file.size;
     const newSize = blob.size;
@@ -121,9 +127,7 @@ const ImageTools = {
       : 0;
     const isReduced = newSize < originalSize;
 
-    let ext = 'jpg';
-    if (targetMime === 'image/webp') ext = 'webp';
-    else if (targetMime === 'image/png') ext = 'png';
+    const ext = ImageTools.extFromMime(blob.type);
 
     const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
     const filename = `${baseName}_compressed.${ext}`;
@@ -140,7 +144,7 @@ const ImageTools = {
       isReduced,
       width,
       height,
-      targetMime
+      targetMime: blob.type
     };
   },
 
@@ -180,16 +184,11 @@ const ImageTools = {
     ctx.drawImage(img, 0, 0, width, height);
 
     if (onProgress) onProgress(90, 'กำลังบันทึกภาพ...');
-    let blob = await new Promise(resolve => canvas.toBlob(resolve, format, quality));
-    if (!blob) {
-      blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    }
+    const blob = await window.PdfTools.canvasToBlob(canvas, format, quality);
     canvas.width = 0;
     canvas.height = 0;
 
-    let ext = 'png';
-    if (format === 'image/jpeg') ext = 'jpg';
-    else if (format === 'image/webp') ext = 'webp';
+    const ext = ImageTools.extFromMime(blob.type);
 
     const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
     const filename = `${baseName}_${width}x${height}.${ext}`;
@@ -229,16 +228,11 @@ const ImageTools = {
     ctx.drawImage(img, 0, 0);
 
     if (onProgress) onProgress(80, 'กำลังแปลงฟอร์แมต...');
-    let blob = await new Promise(resolve => canvas.toBlob(resolve, targetFormat, quality));
-    if (!blob) {
-      blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-    }
+    const blob = await window.PdfTools.canvasToBlob(canvas, targetFormat, quality);
     canvas.width = 0;
     canvas.height = 0;
 
-    let ext = 'png';
-    if (targetFormat === 'image/jpeg') ext = 'jpg';
-    else if (targetFormat === 'image/webp') ext = 'webp';
+    const ext = ImageTools.extFromMime(blob.type);
 
     const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
     const filename = `${baseName}_converted.${ext}`;
