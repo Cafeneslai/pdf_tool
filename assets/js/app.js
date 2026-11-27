@@ -1475,39 +1475,27 @@
     if (!mainApp) return;
 
     mainApp.innerHTML = `
-      <!-- Hero Section -->
+      <!-- Hero: penguin on an ice floe, search is the main action -->
       <section class="hero-section">
         <div class="container hero-content">
-          <div class="hero-mascot-wrap">
-            ${window.PenguMascot.waving(140)}
-          </div>
-          <div class="hero-tag">
-            <span>🐧</span> Small Penguin, Big File Solutions!
-          </div>
-          <h1 class="hero-title">
-            จัดการไฟล์ให้ง่ายขึ้น ในสไตล์<span>เพนกวิน</span>
-          </h1>
-          <p class="hero-desc">
-            รวมเครื่องมือจัดการไฟล์ PDF, รูปภาพ และยูทิลิตี้จำเป็น ใช้งานได้ทันที ไม่ต้องสมัครสมาชิก สบายตา ปลอดภัย 100%
-          </p>
-
-          <div class="privacy-banner">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-            </svg>
-            <span><strong>ปลอดภัยสูงสุด:</strong> ประมวลผลบนเบราว์เซอร์ของคุณโดยตรง ไฟล์ไม่ถูกอัปโหลดหรือบันทึกบนเซิร์ฟเวอร์</span>
-          </div>
-
-          <!-- Search Box -->
-          <div class="search-container">
-            <div class="search-input-wrap">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--slate-400); margin-right: 8px;">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <input type="text" id="toolSearch" class="search-input" placeholder="ค้นหาเครื่องมือ เช่น รวม PDF, บีบอัดภาพ, แปลงรูป..." value="${escapeHtml(state.searchQuery)}">
-              <button id="searchClear" class="search-clear-btn" aria-label="ล้างการค้นหา">✕</button>
+          <div class="hero-copy">
+            <h1 class="hero-title">จัดการไฟล์ PDF และรูปภาพ<br>ในเบราว์เซอร์ของคุณเอง</h1>
+            <p class="hero-desc">
+              ${TOOLS.length} เครื่องมือ ใช้ได้ทันทีโดยไม่ต้องสมัคร ไฟล์ทุกไฟล์ประมวลผลในเครื่องนี้ ไม่ถูกส่งขึ้นเซิร์ฟเวอร์
+            </p>
+            <div class="search-container">
+              <div class="search-input-wrap">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color: var(--slate-400); margin-right: 8px;">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="toolSearch" class="search-input" aria-label="ค้นหาเครื่องมือ" placeholder="ค้นหาเครื่องมือ เช่น รวม PDF, บีบอัดภาพ, เซ็นเอกสาร" value="${escapeHtml(state.searchQuery)}">
+                <button id="searchClear" class="search-clear-btn" aria-label="ล้างการค้นหา">✕</button>
+              </div>
             </div>
+          </div>
+          <div class="hero-floe" aria-hidden="true">
+            <div class="hero-mascot-wrap">${window.PenguMascot.waving(150)}</div>
           </div>
         </div>
       </section>
@@ -1515,10 +1503,10 @@
       <!-- Category Filter Pills -->
       <div class="container">
         <div class="category-nav">
-          <button class="cat-pill-btn ${state.activeCategory === 'all' ? 'active' : ''}" data-cat="all">🌟 เครื่องมือทั้งหมด</button>
-          <button class="cat-pill-btn ${state.activeCategory === 'pdf' ? 'active' : ''}" data-cat="pdf">📑 PDF Tools</button>
-          <button class="cat-pill-btn ${state.activeCategory === 'image' ? 'active' : ''}" data-cat="image">🖼️ Image Tools</button>
-          <button class="cat-pill-btn ${state.activeCategory === 'file' ? 'active' : ''}" data-cat="file">📦 File Utilities</button>
+          <button class="cat-pill-btn ${state.activeCategory === 'all' ? 'active' : ''}" data-cat="all">ทั้งหมด</button>
+          <button class="cat-pill-btn ${state.activeCategory === 'pdf' ? 'active' : ''}" data-cat="pdf">PDF</button>
+          <button class="cat-pill-btn ${state.activeCategory === 'image' ? 'active' : ''}" data-cat="image">รูปภาพ</button>
+          <button class="cat-pill-btn ${state.activeCategory === 'file' ? 'active' : ''}" data-cat="file">ไฟล์ทั่วไป</button>
         </div>
 
         <div id="toolsDisplayArea">
@@ -1527,28 +1515,22 @@
 
         <!-- How it works 3 steps -->
         <section class="how-it-works-section">
-          <h2 style="font-size: 1.6rem; font-weight: 800; color: var(--slate-900); margin-bottom: 0.5rem;">
-            จัดการไฟล์ง่าย ๆ ใน 3 ขั้นตอน
-          </h2>
-          <p style="color: var(--slate-500); max-width: 500px; margin: 0 auto;">สะดวก รวดเร็ว และเป็นมิตรกับผู้ใช้งานทุกคน</p>
+          <h2 class="how-title">ใช้งานอย่างไร</h2>
           <div class="steps-grid">
             <div class="step-card">
               <span class="step-number">1</span>
-              <div class="step-icon">📂</div>
               <h3 class="step-title">เลือกไฟล์</h3>
               <p class="step-desc">ลากไฟล์ลงในพื้นที่จัดวาง หรือคลิกเพื่อเลือกไฟล์จากอุปกรณ์ของคุณ</p>
             </div>
             <div class="step-card">
               <span class="step-number">2</span>
-              <div class="step-icon">⚙️</div>
-              <h3 class="step-title">ปรับแต่งการทำงาน</h3>
+              <h3 class="step-title">ตั้งค่า</h3>
               <p class="step-desc">เลือกการตั้งค่าที่ต้องการ เช่น เรียงหน้า หมุน บีบอัด หรือเปลี่ยนขนาด</p>
             </div>
             <div class="step-card">
               <span class="step-number">3</span>
-              <div class="step-icon">🎉</div>
-              <h3 class="step-title">รับไฟล์ทันที</h3>
-              <p class="step-desc">น้องเพนกวินประมวลผลเสร็จในไม่กี่วินาที พร้อมดาวน์โหลดผลลัพธ์ได้ทันที</p>
+              <h3 class="step-title">ดาวน์โหลด</h3>
+              <p class="step-desc">ประมวลผลในเครื่องของคุณ แล้วกดดาวน์โหลด หรือส่งต่อไปเครื่องมืออื่นได้เลย</p>
             </div>
           </div>
         </section>
@@ -1586,24 +1568,36 @@
       `;
     }
 
-    return `
-      <div class="tools-grid">
-        ${filtered.map(tool => `
-          <a href="#/${tool.id}" class="tool-card" id="card-${tool.id}">
-            <div class="card-top">
-              <div class="tool-icon-box">${tool.icon}</div>
-              <span class="tool-badge ${tool.badge === 'Popular' ? 'popular' : 'client'}">${tool.badge}</span>
-            </div>
-            <h3 class="tool-name">${tool.title}</h3>
-            <p class="tool-desc">${tool.desc}</p>
-            <div class="tool-footer">
-              <span>เปิดใช้งาน</span>
-              <span class="tool-arrow">➔</span>
-            </div>
-          </a>
-        `).join('')}
-      </div>
+    const BADGES = { Popular: 'ยอดนิยม', New: 'ใหม่' };
+    const item = (tool) => `
+      <a href="#/${tool.id}" class="tool-card" id="card-${tool.id}">
+        <span class="tool-icon-box" aria-hidden="true">${tool.icon}</span>
+        <span class="tool-text">
+          <span class="tool-name">${tool.title}${BADGES[tool.badge] ? ` <span class="tool-badge ${tool.badge === 'New' ? 'is-new' : ''}">${BADGES[tool.badge]}</span>` : ''}</span>
+          <span class="tool-desc">${tool.desc}</span>
+        </span>
+      </a>
     `;
+
+    // Full catalogue: one section per category so people scan by file type
+    if (state.activeCategory === 'all' && !state.searchQuery.trim()) {
+      const groups = [
+        { id: 'pdf', label: 'PDF' },
+        { id: 'image', label: 'รูปภาพ' },
+        { id: 'file', label: 'ไฟล์ทั่วไป' }
+      ];
+      return groups.map(g => {
+        const tools = filtered.filter(t => t.category === g.id);
+        return `
+          <section class="tool-group">
+            <h2 class="tool-group-title">${g.label} <span class="tool-group-count">${tools.length}</span></h2>
+            <div class="tools-grid">${tools.map(item).join('')}</div>
+          </section>
+        `;
+      }).join('');
+    }
+
+    return `<div class="tools-grid">${filtered.map(item).join('')}</div>`;
   }
 
   /**

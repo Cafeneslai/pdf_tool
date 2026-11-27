@@ -3302,3 +3302,373 @@ input[type="range"].range-slider::-moz-range-thumb {
   left: 0;
   white-space: nowrap;
 }
+
+/* ==========================================================================
+   v1.6 Design layer: "sea ice"
+   Penguin colours (ink back, snow belly, beak orange) on a glacier-blue base.
+   One memorable element: the hero band with an ice-shelf edge and a floe the
+   mascot stands on. Everything below it stays quiet: rows, not card kits.
+   ========================================================================== */
+:root {
+  --ink: #10243e;
+  --glacier: #0284c7;
+  --sea-ice: #dcf0fa;
+  --snow: #f6fafd;
+  --beak: #c2410c;
+  --beak-soft: #ffedd5;
+  --line: #d6e4ee;
+  --font-thai: 'IBM Plex Sans Thai', 'Prompt', 'Sarabun', -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Mitr', 'IBM Plex Sans Thai', sans-serif;
+  --bg-page: var(--snow);
+  --slate-900: var(--ink);
+}
+
+[data-theme="dark"] {
+  --ink: #e6f0f8;
+  --sea-ice: #10304e;
+  --snow: #0a1624;
+  --beak: #fdba74;
+  --beak-soft: rgba(251, 146, 60, 0.16);
+  --line: #1f3550;
+  --bg-page: var(--snow);
+  --bg-card: #0f2136;
+}
+
+body,
+[data-theme="dark"] body {
+  background: var(--snow);
+}
+
+h1, h2, h3,
+.brand-name,
+.tool-header-text h1,
+.status-title {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* Hero band ---------------------------------------------------------------- */
+.hero-section {
+  background: var(--sea-ice);
+  padding: 3.5rem 0 5.5rem;
+  text-align: left;
+  /* ragged ice-shelf edge */
+  clip-path: polygon(0 0, 100% 0, 100% 86%, 93% 92%, 81% 87%, 68% 95%, 55% 89%, 41% 96%, 27% 88%, 14% 94%, 0 89%);
+  margin-bottom: 1.5rem;
+}
+
+.hero-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 2rem;
+  max-width: 1200px;
+}
+
+.hero-title {
+  font-size: clamp(2rem, 4.2vw, 3.1rem);
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ink);
+  max-width: 15em;
+  margin-bottom: 1rem;
+}
+
+.hero-desc {
+  font-size: 1.1rem;
+  color: var(--slate-600);
+  max-width: 34em;
+  margin-bottom: 1.75rem;
+}
+
+.hero-copy .search-container {
+  margin: 0;
+  max-width: 560px;
+}
+
+.search-input-wrap,
+[data-theme="dark"] .search-input-wrap {
+  background: var(--bg-card);
+  border: 2px solid transparent;
+  border-radius: 14px;
+  box-shadow: 0 1px 0 var(--line);
+  padding: 8px 10px 8px 16px;
+}
+
+.search-input-wrap:focus-within,
+[data-theme="dark"] .search-input-wrap:focus-within {
+  border-color: var(--glacier);
+  box-shadow: none;
+}
+
+.search-input {
+  font-size: 1.05rem;
+}
+
+/* the floe: a flat white slab under the penguin's feet */
+.hero-floe {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 28px;
+}
+
+.hero-floe::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  width: 78%;
+  max-width: 300px;
+  height: 46px;
+  background: #ffffff;
+  clip-path: polygon(6% 30%, 30% 0, 74% 8%, 100% 38%, 92% 100%, 10% 92%);
+  box-shadow: inset 0 -10px 0 #c7e4f4;
+}
+
+[data-theme="dark"] .hero-floe::after {
+  background: #dbeaf5;
+  box-shadow: inset 0 -10px 0 #9cc3dc;
+}
+
+.hero-mascot-wrap {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 -6px;
+  filter: none;
+}
+
+/* Category tabs ------------------------------------------------------------ */
+.category-nav {
+  justify-content: flex-start;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 2rem;
+}
+
+.cat-pill-btn,
+[data-theme="dark"] .cat-pill-btn {
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  padding: 10px 14px;
+  margin-bottom: -1px;
+  color: var(--slate-500);
+  font-size: 1rem;
+  box-shadow: none;
+}
+
+.cat-pill-btn:hover,
+[data-theme="dark"] .cat-pill-btn:hover {
+  background: none;
+  color: var(--ink);
+}
+
+.cat-pill-btn.active,
+[data-theme="dark"] .cat-pill-btn.active {
+  background: none;
+  color: var(--ink);
+  border-bottom-color: var(--glacier);
+  box-shadow: none;
+}
+
+/* Tool rows ---------------------------------------------------------------- */
+.tool-group {
+  margin-bottom: 2.75rem;
+}
+
+.tool-group-title {
+  font-size: 1.4rem;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+
+.tool-group-count {
+  font-family: var(--font-thai);
+  font-size: 0.95rem;
+  color: var(--slate-400);
+  margin-left: 4px;
+}
+
+.tools-grid {
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0 2rem;
+}
+
+.tool-card,
+[data-theme="dark"] .tool-card {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 10px;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: none;
+  transition: background-color var(--transition-fast);
+}
+
+.tool-card:hover,
+[data-theme="dark"] .tool-card:hover {
+  transform: none;
+  background: var(--sea-ice);
+  box-shadow: none;
+}
+
+.tool-card:focus-visible {
+  outline: 3px solid var(--glacier);
+  outline-offset: -3px;
+  box-shadow: none;
+}
+
+.tool-icon-box,
+[data-theme="dark"] .tool-icon-box {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  font-size: 1.35rem;
+  border: 0;
+  border-radius: 12px;
+  background: var(--sea-ice);
+}
+
+.tool-card:hover .tool-icon-box {
+  transform: none;
+  background: var(--bg-card);
+}
+
+.tool-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.tool-name,
+[data-theme="dark"] .tool-name {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.tool-desc,
+[data-theme="dark"] .tool-desc {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--slate-500);
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tool-badge,
+[data-theme="dark"] .tool-badge {
+  display: inline-block;
+  vertical-align: 2px;
+  margin-left: 6px;
+  padding: 1px 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: none;
+  border-radius: 6px;
+  background: var(--sea-ice);
+  color: var(--glacier);
+}
+
+.tool-badge.is-new,
+[data-theme="dark"] .tool-badge.is-new {
+  background: var(--beak-soft);
+  color: var(--beak);
+}
+
+/* How it works (a real sequence, so numbers stay) -------------------------- */
+.how-it-works-section,
+[data-theme="dark"] .how-it-works-section {
+  text-align: left;
+  background: none;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  padding: 2.5rem 0 0;
+  margin: 1rem 0 4rem;
+}
+
+.how-title {
+  font-size: 1.4rem;
+  color: var(--ink);
+}
+
+.steps-grid {
+  gap: 2rem;
+}
+
+.step-card,
+[data-theme="dark"] .step-card,
+[data-theme="dark"] .step-card:hover {
+  align-items: flex-start;
+  text-align: left;
+  padding: 0;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  transform: none;
+}
+
+.step-number {
+  position: static;
+  width: auto;
+  height: auto;
+  margin-bottom: 0.25rem;
+  background: none;
+  box-shadow: none;
+  color: var(--glacier);
+  font-family: var(--font-display);
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+/* Small screens ------------------------------------------------------------ */
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 1.75rem 0 4rem;
+    clip-path: polygon(0 0, 100% 0, 100% 93%, 82% 97%, 60% 93%, 38% 98%, 18% 94%, 0 97%);
+  }
+
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .hero-floe {
+    order: -1;
+    justify-content: flex-start;
+    padding-bottom: 14px;
+  }
+
+  .hero-floe::after {
+    width: 130px;
+    height: 26px;
+    left: 0;
+  }
+
+  .hero-floe .hero-mascot-wrap svg {
+    width: 84px;
+    height: 84px;
+  }
+
+  .hero-title {
+    font-size: 1.85rem;
+  }
+
+  .hero-title br {
+    display: none;
+  }
+
+  .tools-grid {
+    grid-template-columns: 1fr;
+  }
+}

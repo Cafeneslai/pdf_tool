@@ -779,7 +779,7 @@ const PdfTools = {
       const actualFontSize = fontSize * scale;
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      ctx.font = `${isBold ? 'bold ' : ''}${actualFontSize}px Prompt, Kanit, Sarabun, sans-serif`;
+      ctx.font = `${isBold ? 'bold ' : ''}${actualFontSize}px 'IBM Plex Sans Thai', Prompt, Sarabun, sans-serif`;
 
       const metrics = ctx.measureText(text);
       const textWidth = Math.ceil(metrics.width) + (24 * scale);
@@ -789,7 +789,7 @@ const PdfTools = {
       canvas.height = Math.max(textHeight, 10);
 
       const ctx2 = canvas.getContext('2d');
-      ctx2.font = `${isBold ? 'bold ' : ''}${actualFontSize}px Prompt, Kanit, Sarabun, sans-serif`;
+      ctx2.font = `${isBold ? 'bold ' : ''}${actualFontSize}px 'IBM Plex Sans Thai', Prompt, Sarabun, sans-serif`;
       ctx2.fillStyle = fontColor;
       ctx2.globalAlpha = opacity;
       ctx2.textBaseline = 'middle';
@@ -996,13 +996,13 @@ const PdfTools = {
     if (options.addDate && options.dateText) {
       const dCanvas = document.createElement('canvas');
       const dCtx = dCanvas.getContext('2d');
-      dCtx.font = '24px "Prompt", "Kanit", sans-serif';
+      dCtx.font = '24px "IBM Plex Sans Thai", "Prompt", sans-serif';
       const textMetrics = dCtx.measureText(options.dateText);
       const dWidth = Math.ceil(textMetrics.width) + 24;
       const dHeight = 44;
       dCanvas.width = dWidth;
       dCanvas.height = dHeight;
-      dCtx.font = '24px "Prompt", "Kanit", sans-serif';
+      dCtx.font = '24px "IBM Plex Sans Thai", "Prompt", sans-serif';
       dCtx.fillStyle = options.dateColor || '#334155';
       dCtx.textBaseline = 'middle';
       dCtx.fillText(options.dateText, 12, dHeight / 2);
