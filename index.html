@@ -51,7 +51,7 @@
         </svg>
         <div class="brand-title">
           <span class="brand-name">PenguTools</span>
-          <span class="brand-badge">v1.4.0</span>
+          <span class="brand-badge">v1.5.0</span>
         </div>
       </a>
 
@@ -116,7 +116,7 @@
       <div class="brand-title">
         <span style="font-size: 1.4rem;">🐧</span>
         <span class="brand-name">PenguTools</span>
-        <span class="brand-badge">v1.4</span>
+        <span class="brand-badge">v1.5</span>
       </div>
       <button type="button" class="btn-icon-subtle mobile-drawer-close" onclick="PenguApp.closeMobileMenu()" aria-label="ปิดเมนู">✕</button>
     </div>
@@ -245,8 +245,12 @@
 
   <!-- Bundled Standalone Libraries (Local Offline Bundles) -->
   <script src="./assets/libs/pdf-lib.min.js"></script>
-  <script src="./assets/libs/pdf.min.js"></script>
   <script src="./assets/libs/jszip.min.js"></script>
+  <!-- pdf.js 4.x (legacy build) is an ES module; kept as .js so any host serves a JS MIME type -->
+  <script type="module">
+    import * as pdfjsLib from './assets/libs/pdf.min.js';
+    window.pdfjsLib = pdfjsLib;
+  </script>
 
   <!-- Application Modules -->
   <script src="./assets/js/mascot.js"></script>

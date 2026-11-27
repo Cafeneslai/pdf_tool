@@ -1,7 +1,7 @@
 # PenguTools — Cute Online File Toolkit 🐧
 > *Small Penguin, Big File Solutions!* — เครื่องมือจัดการไฟล์ออนไลน์น่ารัก สบายตา ปลอดภัย 100%
 
-[![Version](https://img.shields.io/badge/version-v1.4.0-0284c7.svg)](VERSION.md)
+[![Version](https://img.shields.io/badge/version-v1.5.0-0284c7.svg)](VERSION.md)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Architecture](https://img.shields.io/badge/architecture-100%25%20Client--Side-10b981.svg)](#-จุดเด่นสำคัญ)
 [![PWA Ready](https://img.shields.io/badge/PWA-offline%20ready-8b5cf6.svg)](#-progressive-web-app-pwa--offline-mode)
@@ -17,7 +17,7 @@
    - ประมวลผลไฟล์ทั้งหมดบนเว็บเบราว์เซอร์ของเครื่องผู้ใช้งานโดยตรง (Client-Side) ผ่าน WebAssembly, HTML5 Canvas API, Web Crypto API และไลบรารีสแตนด์อโลน
    - **ไม่มีการส่งไฟล์ขึ้นไปเก็บบนเซิร์ฟเวอร์หรือ Third-party ใดๆ แม้แต่ไบต์เดียว** ไฟล์ส่วนตัวและข้อมูลสำคัญของคุณจึงปลอดภัยอย่างแท้จริง
    - มีระบบตัดอักขระพิเศษ (HTML Sanitization) ป้องกันการโจมตีแบบ XSS
-   - เปิด PDF ด้วย pdf.js แบบ `isEvalSupported: false` ป้องกันช่องโหว่ CVE-2024-4367 จากไฟล์ PDF ที่ถูกดัดแปลง
+   - ใช้ pdf.js 4.10.38 ที่แพตช์ช่องโหว่ CVE-2024-4367 แล้ว และเปิด PDF แบบ `isEvalSupported: false` เพิ่มอีกชั้น
 2. **📲 รองรับ Progressive Web App (PWA) และทำงานแบบ Offline 100%:**
    - ติดตั้งลงหน้าจอโทรศัพท์ (iOS/Android) หรือคอมพิวเตอร์ (Windows/macOS) ได้ทันที
    - มี Service Worker แคชไฟล์ที่จำเป็น เปิดใช้งานและจัดการไฟล์ได้แม้ในที่ที่ไม่มีสัญญาณอินเทอร์เน็ต
@@ -100,8 +100,8 @@ pdf_tool/
     │       └── file-tools.js            # เอนจินคำนวณขนาดไฟล์, ZIP, และ Web Crypto SHA-256
     └── libs/
         ├── pdf-lib.min.js               # @cantoo/pdf-lib 2.11.1 (fork ของ pdf-lib ที่รองรับเข้า/ถอดรหัส, 602 KB)
-        ├── pdf.min.js                   # ไลบรารีเรนเดอร์ PDF แบบสแตนด์อโลน (312.5 KB)
-        ├── pdf.worker.min.js            # Worker สำหรับเรนเดอร์ PDF (1,061.7 KB)
+        ├── pdf.min.js                   # pdf.js 4.10.38 legacy build (ES module, โหลดด้วย <script type="module">, 389 KB)
+        ├── pdf.worker.min.js            # Worker ของ pdf.js 4.10.38 (module worker, 1,384 KB)
         └── jszip.min.js                 # ไลบรารีสร้างและอ่านไฟล์ ZIP (95.3 KB)
 ```
 

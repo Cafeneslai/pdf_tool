@@ -1,6 +1,6 @@
 # 🐧 PenguTools — ข้อมูลเวอร์ชันและบันทึกการเปลี่ยนแปลง (Version & Changelog)
 
-> **Current Version:** `v1.4.0`  
+> **Current Version:** `v1.5.0`  
 > **Release Date:** 2026-11-27  
 > **Architecture:** 100% Client-Side In-Browser Processing (Zero-Backend, PWA Installable, Offline Ready)  
 > **Maintainer:** Cafeneslai  
@@ -12,7 +12,8 @@
 
 | เวอร์ชัน | วันที่เผยแพร่ | สถานะ | สรุปไฮไลท์สำคัญ |
 | :--- | :--- | :--- | :--- |
-| **v1.4.0** | 2026-11-27 | **Current (Stable)** | **Security & Correctness:** Unlock PDF ใช้งานได้จริง, ป้องกัน CVE-2024-4367, แก้รูปเอียงจาก EXIF, ลายน้ำ/ลายเซ็นบนหน้าที่หมุน + เพิ่ม Protect PDF, PDF to Text, คลิกวางลายเซ็นบนหน้าจริง, PWA Share Target |
+| **v1.5.0** | 2026-11-27 | **Current (Stable)** | **pdf.js 4.10.38:** อัปเกรดเอนจินเรนเดอร์ PDF จาก 3.11.174 (แพตช์ CVE-2024-4367 ที่ต้นทาง) |
+| v1.4.0 | 2026-11-27 | Stable | **Security & Correctness:** Unlock PDF ใช้งานได้จริง, ป้องกัน CVE-2024-4367, แก้รูปเอียงจาก EXIF, ลายน้ำ/ลายเซ็นบนหน้าที่หมุน + เพิ่ม Protect PDF, PDF to Text, คลิกวางลายเซ็นบนหน้าจริง, PWA Share Target |
 | v1.3.1 | 2026-10-18 | Stable | **Deep Bug Hunt & Resiliency:** แก้ไขบัค ZIP Inspector Index Mismatch, แก้ปัญหาภาพลายเซ็น JPG/WebP, ป้องกันชื่อไฟล์ซ้ำใน ZIP, เพิ่ม Live Placement Preview ใน Sign PDF, ปรับปรุงการจัดการ 0-byte/TB files |
 | **v1.3.0** | 2026-10-18 | Stable | เพิ่มเครื่องมือ **Sign PDF (เซ็นเอกสาร PDF ออนไลน์)**, ระบบ **Workflow Chaining (ส่งต่อไฟล์ข้ามเครื่องมือ)**, รองรับ **Progressive Web App (PWA) & Offline Mode** |
 | **v1.2.0** | 2026-10-17 | Stable | แก้ไขบัคความปลอดภัย (XSS), แก้ปัญหา Memory Leak (Canvas Buffers), รองรับเลขอารบิก-ไทย, ปรับปรุง Responsive & Touch ทุกหน้าจอ, เพิ่มระบบ Mobile Drawer Navigation |
@@ -22,6 +23,15 @@
 ---
 
 ## 🚀 บันทึกการเปลี่ยนแปลงฉบับละเอียด (Detailed Changelog)
+
+### [v1.5.0] — 2026-11-27 (pdf.js 4.x Upgrade)
+
+- อัปเกรด pdf.js จาก 3.11.174 เป็น **4.10.38 (legacy build)** ซึ่งแพตช์ CVE-2024-4367 และบัคเรนเดอร์อื่น ๆ ที่ต้นทาง; ยังคง `isEvalSupported: false` ไว้อีกชั้น
+- pdf.js 4.x เป็น ES module: โหลดผ่าน `<script type="module">` แล้วตั้ง `window.pdfjsLib` ให้โค้ดเดิมใช้ต่อได้; worker เป็น module worker
+- ใช้ legacy build เพื่อรองรับ Safari/Android รุ่นเก่า และคงนามสกุล `.js` เพื่อให้ Shared Hosting ส่ง MIME type ของ JavaScript ถูกต้อง (Module script จะไม่ทำงานถ้าเซิร์ฟเวอร์ส่ง `.mjs` เป็น `application/octet-stream`)
+- เปลี่ยน Cache ของ Service Worker เป็น `pengutools-v1.5.0` เพื่อให้ผู้ใช้เดิมได้ไลบรารีใหม่
+
+---
 
 ### [v1.4.0] — 2026-11-27 (Security, Correctness & New Tools)
 
