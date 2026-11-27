@@ -1667,7 +1667,7 @@
               <line x1="19" y1="12" x2="5" y2="12"></line>
               <polyline points="12 19 5 12 12 5"></polyline>
             </svg>
-            <span>กลับหน้าหลัก</span>
+            <span>หน้าแรก</span>
           </a>
         </div>
 
@@ -1680,12 +1680,6 @@
               <p>${tool.desc}</p>
             </div>
           </div>
-          <div class="tool-safety-pill">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            <span>ประมวลผลบนเบราว์เซอร์ 100%</span>
-          </div>
         </div>
 
         <!-- Drop Zone -->
@@ -1696,7 +1690,7 @@
               ${window.PenguMascot.droppable(95)}
             </div>
             <div class="dropzone-title">ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</div>
-            <div class="dropzone-subtitle">รองรับไฟล์ชนิด: ${tool.accept} ${tool.multiple ? '(เลือกได้หลายไฟล์)' : '(1 ไฟล์)'}</div>
+            <div class="dropzone-subtitle">${acceptLabel(tool.accept)}${tool.multiple ? ' เลือกได้หลายไฟล์' : ' ครั้งละ 1 ไฟล์'}</div>
             <button type="button" class="dropzone-btn" onclick="document.getElementById('fileInput').click()">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1705,7 +1699,7 @@
               </svg>
               <span>เลือกไฟล์จากอุปกรณ์</span>
             </button>
-            <div class="dropzone-limit-note">🔒 ปลอดภัยสูงสุด ไฟล์จะไม่ถูกส่งไปยังเซิร์ฟเวอร์ใด ๆ</div>
+            <div class="dropzone-limit-note">ไฟล์อยู่ในเครื่องของคุณ ไม่ถูกอัปโหลดไปที่ไหน</div>
           </div>
         </div>
 
@@ -1715,7 +1709,7 @@
             <!-- Files List Card -->
             <div class="workspace-card">
               <div class="card-title">
-                <span>รายการไฟล์ที่เลือก (<span id="fileCountBadge">0</span>)</span>
+                <span>ไฟล์ที่เลือก <span id="fileCountBadge" class="count-muted">0</span></span>
                 <button type="button" class="btn-secondary" style="padding: 4px 12px; font-size: 0.8rem;" onclick="PenguApp.clearFiles()">ล้างทั้งหมด</button>
               </div>
               <div id="fileListContainer" class="file-list"></div>
@@ -1724,7 +1718,7 @@
             <!-- Settings Card -->
             <div class="workspace-card">
               <div class="card-title">
-                <span>การตั้งค่า</span>
+                <span>ตั้งค่า</span>
               </div>
               <div id="toolSettingsContainer">
                 ${tool.renderSettings ? tool.renderSettings(state.selectedFiles) : ''}
@@ -1734,10 +1728,9 @@
 
           <!-- Action Bar -->
           <div class="action-bar">
-            <button type="button" class="btn-secondary" onclick="PenguApp.clearFiles()">ยกเลิก</button>
+            <button type="button" class="btn-secondary" onclick="PenguApp.clearFiles()">ล้างไฟล์</button>
             <button type="button" id="btnExecute" class="btn-primary-action" onclick="PenguApp.runAction()">
               <span>${tool.btnText || 'เริ่มประมวลผล'}</span>
-              <span>➔</span>
             </button>
           </div>
         </div>
@@ -1804,6 +1797,17 @@
         handleFilesAdded(pending, tool);
       }, 60);
     }
+  }
+
+  /**
+   * Plain-language name for an accept string, e.g. ".pdf,application/pdf" -> "ไฟล์ PDF"
+   */
+  function acceptLabel(accept) {
+    if (!accept || accept === '*/*') return 'ไฟล์ทุกชนิด';
+    if (accept.includes('image/')) return 'รูปภาพ JPG, PNG, WebP';
+    if (accept.includes('.zip')) return 'ไฟล์ ZIP';
+    if (accept.includes('.pdf')) return 'ไฟล์ PDF';
+    return accept;
   }
 
   /**
@@ -1915,6 +1919,9 @@
 
     if (!workspaceArea || !fileListContainer) return;
 
+    const dropzone = document.getElementById('dropzone');
+    if (dropzone) dropzone.classList.toggle('has-files', state.selectedFiles.length > 0);
+
     if (state.selectedFiles.length === 0) {
       workspaceArea.style.display = 'none';
       return;
@@ -1965,7 +1972,7 @@
             <span class="file-item-sub">
               <span>${window.PdfTools.formatSize(file.size)}</span>
               <span>•</span>
-              <span>${escapeHtml(file.type || file.name.split('.').pop().toUpperCase())}</span>
+              <span>${escapeHtml((file.name.split('.').pop() || '').toUpperCase())}</span>
             </span>
           </div>
         </div>
@@ -2039,7 +2046,7 @@
           <div class="status-mascot-box">
             ${window.PenguMascot.working(120)}
           </div>
-          <h2 class="status-title">น้องเพนกวินกำลังประมวลผล...</h2>
+          <h2 class="status-title">กำลังประมวลผล</h2>
           <p id="statusMsg" class="status-desc">กำลังเริ่มจัดเตรียมไฟล์...</p>
           <div class="progress-container">
             <div id="progressBar" class="progress-bar-fill"></div>
@@ -2074,7 +2081,7 @@
             <div class="status-mascot-box">
               ${window.PenguMascot.happy(130)}
             </div>
-            <h2 class="status-title" style="color: var(--success-700);">เย้! ทำงานสำเร็จแล้ว 🐧</h2>
+            <h2 class="status-title">เสร็จแล้ว</h2>
             <p class="status-desc">${result.successMsg || 'ประมวลผลไฟล์ของคุณเสร็จสมบูรณ์ พร้อมดาวน์โหลดแล้วครับ'}</p>
             
             ${result.customResultHtml || ''}
@@ -2087,11 +2094,11 @@
                     <polyline points="7 10 12 15 17 10"></polyline>
                     <line x1="12" y1="15" x2="12" y2="3"></line>
                   </svg>
-                  <span>ดาวน์โหลดไฟล์ผลลัพธ์</span>
+                  <span>ดาวน์โหลด ${escapeHtml(result.filename || '')}</span>
                 </a>
               ` : ''}
               <button type="button" class="btn-secondary" onclick="PenguApp.resetCurrentTool()">
-                🔄 ทำรายการใหม่
+                เริ่มไฟล์ใหม่
               </button>
             </div>
 
@@ -2108,13 +2115,13 @@
             <div class="status-mascot-box">
               ${window.PenguMascot.comfort(120)}
             </div>
-            <h2 class="status-title" style="color: var(--danger-700);">อุ๊ย! เกิดข้อผิดพลาด</h2>
+            <h2 class="status-title">ทำไม่สำเร็จ</h2>
             <div class="alert-box alert-error" style="max-width: 600px; margin: 1rem auto;">
               <span>${escapeHtml(err.message || 'ไม่สามารถประมวลผลไฟล์ได้ กรุณาตรวจสอบความถูกต้องของไฟล์และลองอีกครั้ง')}</span>
             </div>
             <div class="result-actions" style="margin-top: 1.5rem;">
               <button type="button" class="btn-secondary" onclick="PenguApp.runAction()">
-                ลองใหม่อีกครั้ง
+                ลองอีกครั้ง
               </button>
               <button type="button" class="btn-secondary" onclick="PenguApp.clearFiles()">
                 เลือกไฟล์ใหม่
@@ -2438,8 +2445,7 @@
     return `
       <div class="chain-workflow-box">
         <div class="chain-header">
-          <span class="chain-title">⚡ ทำงานต่อด้วยไฟล์นี้ทันที</span>
-          <span class="chain-badge">ไม่ต้องอัปโหลดซ้ำ</span>
+          <span class="chain-title">ทำต่อด้วยไฟล์นี้ ไม่ต้องอัปโหลดซ้ำ</span>
         </div>
         <div class="chain-pills">
           ${tools.map(t => `

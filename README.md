@@ -1,7 +1,7 @@
 # PenguTools — Cute Online File Toolkit 🐧
 > *Small Penguin, Big File Solutions!* — เครื่องมือจัดการไฟล์ออนไลน์น่ารัก สบายตา ปลอดภัย 100%
 
-[![Version](https://img.shields.io/badge/version-v1.6.0-0284c7.svg)](VERSION.md)
+[![Version](https://img.shields.io/badge/version-v1.7.0-0284c7.svg)](VERSION.md)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Architecture](https://img.shields.io/badge/architecture-100%25%20Client--Side-10b981.svg)](#-จุดเด่นสำคัญ)
 [![PWA Ready](https://img.shields.io/badge/PWA-offline%20ready-8b5cf6.svg)](#-progressive-web-app-pwa--offline-mode)

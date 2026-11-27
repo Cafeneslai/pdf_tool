@@ -3,7 +3,7 @@
  * Offline Caching & Progressive Web App Engine
  */
 
-const CACHE_NAME = 'pengutools-v1.6.0';
+const CACHE_NAME = 'pengutools-v1.7.0';
 const SHARE_CACHE = 'pengutools-share';
 
 const PRECACHE_ASSETS = [
@@ -28,7 +28,8 @@ const PRECACHE_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(PRECACHE_ASSETS).catch((err) => {
+      // cache: 'reload' bypasses the HTTP cache so a new deploy never precaches stale files
+      return cache.addAll(PRECACHE_ASSETS.map((url) => new Request(url, { cache: 'reload' }))).catch((err) => {
         console.warn('[SW] Pre-caching non-fatal warning:', err);
       });
     }).then(() => self.skipWaiting())

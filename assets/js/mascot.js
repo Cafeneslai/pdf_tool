@@ -245,7 +245,6 @@ const PenguMascot = {
           ${mascotFn(size)}
         </div>
         <div class="pengu-speech-bubble">
-          <span class="pengu-speech-badge">🐧 น้องเพนกวินแนะนำ</span>
           <p class="pengu-speech-text">${tipText}</p>
         </div>
       </div>
